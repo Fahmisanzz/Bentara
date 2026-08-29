@@ -1,0 +1,58 @@
+enum UserRole {
+  tuli,
+  dengar,
+}
+
+class UserModel {
+  final String id;
+  final String email;
+  final String name;
+  final UserRole role;
+  final DateTime createdAt;
+
+  UserModel({
+    required this.id,
+    required this.email,
+    required this.name,
+    required this.role,
+    required this.createdAt,
+  });
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] as String,
+      email: json['email'] as String,
+      name: json['name'] as String? ?? 'User',
+      role: json['role'] == 'tuli' ? UserRole.tuli : UserRole.dengar,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'role': role.name,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+  UserModel copyWith({
+    String? id,
+    String? email,
+    String? name,
+    UserRole? role,
+    DateTime? createdAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}

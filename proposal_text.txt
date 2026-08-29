@@ -1,0 +1,184 @@
+Lomba HackathonLomba Hackathon
+Lomba Hackathon
+Lomba Hackathon
+BENTARA : BANTUAN KOMUNIKASI DUA ARAH BERBASIS ARTIFICIAL INTELLIGENCE UNTUK TEMAN TULI
+Disusun Oleh :
+TIM_APAKAH JUARA?
+ANDROU EKA RACHMAD
+16324031
+FAHMI ABDUL BACHTYAR
+16324083
+HAIKAL DZUHRI AZIZ
+16325012
+POLITEKNIK NEGERI FAKFAK
+2026
+DAFTAR ISI
+DAFTAR ISIii
+PENDAHULUANiii
+1.1 Latar Belakangiii
+1.2 Rumusan Masalahiii
+1.3 Tujuaniv
+1.4 Manfaativ
+GAGASAN5
+2.1 Kondisi Aktual Permasalahan5
+2.2 Solusi yang Pernah Ditawarkan dan Keterbatasannya6
+2.3 Deskripsi Gagasan BENTARA7
+2.4 Keunggulan dan Kebaruan8
+2.5 Perbandingan dengan Solusi Sejenis9
+2.6 Fitur Utama9
+2.7 Alur Kerja Kecerdasan Buatan (AI Workflow)10
+2.8 Teknologi yang Digunakan12
+2.9 Arsitektur Sistem13
+2.10 Rancangan Data (Model Data)14
+2.11 Prediksi Hasil Implementasi15
+2.12 Peran dan Kontribusi Pihak Terkait17
+2.13 Tahapan Strategis Penerapan17
+KESIMPULAN19
+DAFTAR PUSTAKA20
+PENDAHULUAN
+Latar Belakang
+Komunikasi merupakan kebutuhan mendasar setiap individu untuk memperoleh layanan, informasi, dan haknya sebagai warga negara, namun hak atas komunikasi yang setara belum sepenuhnya dinikmati Teman Tuli. World Health Organization mencatat sekitar 1,5 miliar penduduk dunia mengalami gangguan pendengaran dan angkanya terus meningkat (Organization, 2024), sementara di Indonesia sekitar 7,03% penyandang disabilitas atau lebih dari dua juta jiwa merupakan individu Tuli (Indonesia, 2020).
+Persoalan utamanya bukan ketidakmampuan mendengar, melainkan hambatan komunikasi karena sebagian besar masyarakat belum memahami bahasa isyarat dan juru bahasa isyarat tidak selalu tersedia. Hambatan ini nyata ketika Teman Tuli berada di rumah sakit, sekolah, kantor pemerintahan, kepolisian, bank, transportasi umum, hingga situasi darurat, dan berbagai kajian menegaskan aksesibilitas mereka di ruang publik masih belum optimal(Handayani et al., 2024).
+Kemajuan kecerdasan buatan membuka peluang nyata untuk menjembatani kesenjangan ini. Pengenalan ucapan otomatis (Automatic Speech Recognition) Bahasa Indonesia kini mampu mencapai Word Error Rate serendah 5,59% melalui optimasi model Wav2Vec2 (Darmawan et al., 2025), sedangkan pengenalan bahasa isyarat berbasis MediaPipe dan Long Short-Term Memory (LSTM) telah mencapai akurasi real-time hingga 97% dengan waktu proses sekitar 25 milidetik per frame (Anithadevi et al., 2025). Kematangan ini membuat asisten komunikasi dua arah pada perangkat bergerak semakin realistis untuk diwujudkan.
+Aplikasi penerjemah bahasa isyarat yang ada umumnya masih terbatas: bekerja satu arah, menerjemahkan kata per kata tanpa memahami konteks, bergantung penuh pada internet, dan belum mendukung situasi darurat, sehingga komunikasi kerap terhenti dan tidak tuntas. Berangkat dari persoalan tersebut, penulis mengusulkan “Bantuan Komunikasi Dua Arah Berbasis Artificial Intelligence Untuk Teman Tuli (BENTARA)”, sebuah platform AI Communication Assistant yang tidak sekadar menerjemahkan, melainkan menuntaskan komunikasi dua arah antara Teman Tuli dan Teman Dengar secara cepat, kontekstual, dan inklusif.
+Rumusan Masalah
+Bagaimana membangun sistem komunikasi dua arah berbasis kecerdasan buatan yang mampu menghubungkan Teman Tuli dan Teman Dengar secara real-time?
+Bagaimana merancang alur konversi ucapan, teks, dan gestur bahasa isyarat yang kontekstual sehingga hasil komunikasi terasa alami?
+Bagaimana menghadirkan fitur pendukung seperti mode darurat, frasa cepat, dan riwayat percakapan yang relevan dengan kebutuhan komunikasi sehari-hari Teman Tuli?
+Tujuan
+Mengembangkan purwarupa aplikasi BENTARA sebagai asisten komunikasi dua arah berbasis kecerdasan buatan pada platform Android.
+Membuktikan validitas teknis alur komunikasi dua arah (ucapan – teks – gestur) yang terintegrasi dengan latensi rendah.
+Menyediakan fitur yang berorientasi pada penyelesaian masalah komunikasi nyata Teman Tuli di ruang layanan publik dan situasi darurat.
+Manfaat
+Bagi Teman Tuli: memperoleh sarana komunikasi yang setara, cepat, dan dapat diandalkan di berbagai situasi.
+Bagi Teman Dengar dan penyedia layanan publik: memudahkan pelayanan kepada Teman Tuli tanpa harus menguasai bahasa isyarat.
+Bagi masyarakat luas: mendorong terwujudnya lingkungan yang inklusif dan mendukung transformasi digital yang berkelanjutan.
+GAGASAN
+Kondisi Aktual Permasalahan
+Gambar 1 Juru penerjemah bahasa
+Saat ini, interaksi antara Teman Tuli dan masyarakat umum masih sangat bergantung pada kehadiran juru bahasa isyarat atau tulisan manual. Ketika keduanya tidak tersedia, komunikasi menjadi terhambat, lambat, bahkan berpotensi menimbulkan kesalahpahaman yang berisiko, terutama pada layanan kesehatan dan situasi darurat. Seperti pada Gambar 1 juru penerjemah hanya berada pada saat siaran televisi atau press conference pejabat pemerintahan yang ingin menyampaikan informasi kepada masyarakat dan fasilitas seperti ini hanya terpusat di perkotaan besar sehingga pemerataan sarana komunikasi tidak terjangkau ke daerah terpencil.
+Ketiadaan sarana komunikasi yang praktis membuat Teman Tuli kerap berada pada posisi yang kurang diuntungkan dalam mengakses layanan publik. Kehadiran juru bahasa isyarat di ruang publik memang sangat membantu kelancaran komunikasi, tetapi ketersediaannya masih sangat terbatas dan tidak merata. Di banyak daerah, khususnya di Kabupaten Fakfak, hingga saat ini belum tersedia penerjemah bahasa isyarat profesional maupun sekolah luar biasa yang secara khusus menangani Teman Tuli. Akibatnya, Teman Tuli di wilayah tersebut nyaris tidak memiliki sarana pendukung komunikasi yang memadai, sehingga hambatan dalam mengakses layanan publik menjadi semakin nyata dan mendesak untuk diatasi.
+Dampak keterbatasan ini paling terasa pada layanan yang menuntut ketepatan dan kecepatan, seperti unit gawat darurat rumah sakit, pelaporan di kepolisian, maupun transaksi perbankan, ketika kesalahpahaman dapat berakibat fatal atau merugikan. Kajian mengenai pemanfaatan aplikasi bahasa isyarat digital menunjukkan bahwa solusi berbasis teknologi berpotensi memperkuat komunikasi yang inklusif bagi komunitas Tuli apabila dirancang sesuai kebutuhan nyata pengguna (Swastikawara et al., 2025).
+Solusi yang Pernah Ditawarkan dan Keterbatasannya
+Beberapa solusi berbasis teknologi telah dikembangkan, seperti aplikasi penerjemah abjad isyarat dan sistem pengenalan bahasa isyarat berbasis citra. Penelitian pengenalan bahasa isyarat Indonesia (BISINDO/SIBI) menggunakan metode seperti CNN, LSTM, maupun deteksi titik kunci tangan telah menunjukkan hasil yang menjanjikan (Afwan et al., 2026; Sari et al., 2024; Wisudawati et al., 2026; Zholshiyeva et al., 2025). Pada sisi pengenalan ucapan, model ASR untuk Bahasa Indonesia juga semakin matang dengan tingkat kesalahan kata yang rendah (Darmawan dkk., 2025), sementara kerangka kerja gabungan MediaPipe dan LSTM terbukti mengenali gestur secara real-time dengan akurasi tinggi (Anithadevi et al., 2025). Kajian tentang aplikasi bahasa isyarat digital turut menegaskan potensinya dalam mendorong komunikasi yang inklusif bagi komunitas Tuli (Swastikawara et al., 2025). Namun, solusi yang ada umumnya masih bersifat satu arah, berfokus pada penerjemahan huruf atau kata lepas, membutuhkan koneksi internet, serta belum mengakomodasi kebutuhan komunikasi dua arah yang utuh dan situasi darurat. Selain itu, sebagian besar penelitian berhenti pada tahap pengenalan (recognition) dan belum menautkannya ke dalam satu alur percakapan yang tuntas antara Teman Tuli dan Teman Dengar. BENTARA hadir untuk mengisi celah tersebut.
+Deskripsi Gagasan BENTARA
+Gambar 2 konsep BENTARA
+BENTARA merupakan aplikasi mobile Android berbasis kecerdasan buatan yang berperan sebagai asisten komunikasi dua arah antara Teman Tuli dan Teman Dengar. Alur komunikasinya dirancang tuntas: ucapan Teman Dengar dikenali melalui Speech Recognition, diproses agar sesuai konteks oleh AI Context Translation, lalu ditampilkan dalam bentuk teks maupun visual bahasa isyarat kepada Teman Tuli; sebaliknya, gestur bahasa isyarat Teman Tuli dikenali, diubah menjadi teks, kemudian disintesis menjadi suara yang didengar Teman Dengar. Dengan demikian, fokus BENTARA adalah menuntaskan proses komunikasi, bukan sekadar menerjemahkan.
+Gambar 3 Ilustrasi Sistem BENTARA
+Keunggulan dan Kebaruan
+Gambar 4 Keunggulan dan Kebaruan  BENTARA
+Inti kebaruan BENTARA terletak pada AI Context Translation yang sadar konteks. Mesin tidak sekadar menyalin ucapan menjadi teks, tetapi mengenali situasi layanan yang sedang berlangsung (misalnya rumah sakit, kepolisian, atau perbankan), lalu menormalkan dan menyusun ulang kalimat menjadi Bahasa Indonesia yang ringkas dan baku sehingga lebih mudah dipahami Teman Tuli pengguna BISINDO. Sistem juga memilih frasa yang paling sesuai konteks pada mode komunikasi cepat, serta dapat mendeteksi indikasi kebingungan pengguna dan menyarankan frasa alternatif. Kemampuan inilah yang membedakan BENTARA dari sekadar penggabungan Speech to Text dan pengenalan isyarat. Selain keunikan tersebut, BENTARA menawarkan sejumlah keunggulan dan unsur kebaruan berikut:
+Komunikasi dua arah yang tuntas: alur ucapan, teks, dan gestur ditautkan menjadi satu percakapan utuh, bukan sekadar penerjemahan satu arah.
+Pemahaman konteks: melalui AI Context Translation, keluaran dirapikan agar kontekstual dan alami, tidak sekadar diterjemahkan kata per kata.
+Berorientasi pada situasi nyata: dilengkapi Emergency Mode dan Quick Communication yang dirancang khusus untuk layanan publik dan keadaan darurat.
+Tahan terhadap keterbatasan koneksi: fungsi inti (Speech to Text, Text to Speech, dan Sign Recognition) dirancang dapat berjalan pada perangkat sehingga tetap berfungsi meski jaringan terbatas.
+Arsitektur modular dan hemat sumber daya: memanfaatkan layanan bawaan platform serta model ringan berbasis titik kunci tangan sehingga efisien dan mudah dikembangkan lebih lanjut.
+Perbandingan dengan Solusi Sejenis
+Untuk mempertegas posisi dan keunggulan BENTARA, berikut perbandingan cakupan fungsional dengan solusi sejenis yang umum dikenal, yaitu Google Live Transcribe (transkripsi ucapan satu arah) dan SignAll (pengenalan bahasa isyarat). Perbandingan difokuskan pada fungsi inti komunikasi dua arah.
+Tabel 1. Perbandingan fitur BENTARA dengan solusi sejenis.
+Fitur
+Google Live Transcribe
+SignAll
+BENTARA
+Speech to Text (suara ke teks)
+Ya
+Tidak
+Ya
+Sign Recognition (isyarat ke teks)
+Tidak
+Ya
+Ya
+Komunikasi dua arah terpadu
+Tidak
+Sebagian
+Ya
+Pemahaman konteks (AI Context)
+Tidak
+Tidak
+Ya
+Emergency Mode & Quick Communication
+Tidak
+Tidak
+Ya
+Fungsi inti tanpa internet
+Sebagian
+Tidak
+Ya
+Fitur Utama
+Pada tahap purwarupa untuk KMIPN Hackathon, cakupan fitur difokuskan pada fungsi komunikasi inti yang realistis untuk dikembangkan dan didemonstrasikan:
+Login dan Registrasi  autentikasi dan pendaftaran akun pengguna.
+Speech to Text  konversi ucapan Teman Dengar menjadi teks.
+Text to Speech  konversi teks menjadi suara untuk Teman Dengar.
+AI Context Translation  penyesuaian teks berdasarkan konteks agar hasil lebih alami.
+Sign Recognition (versi terbatas)  pengenalan gestur isyarat pada kosakata terbatas untuk demonstrasi.
+Conversation History  penyimpanan dan penampilan riwayat percakapan.
+Quick Communication  frasa siap pakai untuk mempercepat komunikasi umum.
+Emergency Mode  akses cepat komunikasi pada situasi darurat.
+Profile dan Settings  pengelolaan akun dan preferensi aplikasi.
+Gambar 5 flowchart fitur BENTARA
+Fitur lanjutan seperti Avatar 3D, Offline AI penuh, Dashboard Web, Cloud Synchronization, AI Sign Tutor, serta integrasi perangkat wearable dan smart glasses menjadi bagian dari rencana pengembangan jangka panjang (Future Roadmap) dan tidak termasuk dalam cakupan .
+Alur Kerja Kecerdasan Buatan (AI Workflow)
+Alur pemrosesan AI dirancang realistis untuk periode hackathon dengan memanfaatkan layanan bawaan platform dan pustaka open-source yang telah teruji, sehingga tim dapat berfokus pada integrasi end-to-end:
+Speech to Text menggunakan Android Speech API secara native pada perangkat.
+Context Translation sebagai layanan ringan pada Supabase Edge Function dengan pendekatan rule-based yang dikombinasikan pemanggilan API model bahasa untuk merapikan struktur kalimat.
+Text to Speech menggunakan Android TTS secara native pada perangkat.
+Sign Recognition menggunakan MediaPipe untuk mendeteksi titik kunci tangan (hand landmarks) yang kemudian diklasifikasikan dengan model ringan, sehingga hemat data latih dan cepat pada inferensi.
+Gambar 6 Ilustrasi AI Context Translation
+Sebagai ilustrasi konkret lihat pada Gambar 6 cara kerja AI Context Translation, ucapan spontan Teman Dengar diubah menjadi kalimat yang lebih ringkas, baku, dan sesuai konteks sebelum ditampilkan kepada Teman Tuli. Contoh: masukan “Perut saya sakit dua hari” menghasilkan keluaran “Saya mengalami sakit perut selama dua hari.”; pada konteks rumah sakit, masukan “mau daftar yang BPJS bisa nggak ya” menghasilkan “Saya ingin mendaftar layanan menggunakan BPJS.”; sedangkan pada Emergency Mode, masukan “tolong cepat ini darurat” diprioritaskan menjadi “Saya membutuhkan bantuan darurat sekarang.”
+Pilihan pendekatan ini didukung bukti empiris terkini. Model ASR untuk Bahasa Indonesia telah mampu mencapai Word Error Rate serendah 5,59% (Darmawan et al., 2025), sementara kombinasi MediaPipe dan LSTM terbukti mengenali gestur secara real-time dengan akurasi hingga 97% pada waktu proses sekitar 25 milidetik per frame (Anithadevi et al., 2025). Dengan demikian, target latensi rendah dan akurasi yang memadai pada perangkat bergerak realistis untuk dicapai selama periode hackathon.
+Gambar 7 Flowchart alur komunikasi dua arah BENTARA
+Teknologi yang Digunakan
+Aplikasi Client: Flutter (Android), state management Riverpod, penyimpanan lokal Hive.
+Backend: Supabase (Backend-as-a-Service) yang mencakup Supabase Auth untuk autentikasi, basis data PostgreSQL, serta Edge Function untuk orkestrasi AI Context Translation, sehingga tim tidak perlu membangun dan memelihara server sendiri.
+Basis Data: PostgreSQL yang dikelola melalui Supabase.
+Komponen AI: Android Speech API, Android TTS, MediaPipe (hand landmarks), serta pemanggilan API model bahasa untuk penyesuaian konteks.
+Keamanan: autentikasi berbasis token JWT yang dikelola melalui Supabase Auth.
+Pemilihan teknologi tersebut didasarkan pada pertimbangan efisiensi dan kematangan ekosistem. Flutter memungkinkan pengembangan lintas platform dari satu basis kode sehingga hemat waktu bagi tim kecil, sedangkan pemanfaatan Supabase sebagai Backend-as-a-Service menekan beban pengelolaan infrastruktur sehingga tim dapat berfokus pada kualitas alur komunikasi. Penggunaan MediaPipe yang berbasis titik kunci tangan mendukung inferensi ringan pada perangkat, sejalan dengan temuan bahwa pendekatan ini efisien dan mampu berjalan secara real-time (Anithadevi et al., 2025).
+Arsitektur Sistem
+Sistem BENTARA menggunakan arsitektur client-server. Aplikasi client Flutter disusun dengan pendekatan feature-first agar setiap modul (Authentication, Communication, History, Quick Communication, Emergency, Profile, Settings) dapat dikembangkan secara paralel. Pada sisi server, BENTARA memanfaatkan Supabase sebagai backend terkelola (managed) yang menyediakan layanan autentikasi (Supabase Auth), basis data PostgreSQL, serta Edge Function untuk mengorkestrasi proses AI Context Translation, sehingga tim tidak perlu membangun dan memelihara server sendiri dan dapat berfokus pada integrasi alur komunikasi. Sebagian fungsi inti, seperti Speech to Text, Text to Speech, dan Sign Recognition, tetap dapat berjalan secara lokal di perangkat untuk mendukung skenario keterbatasan koneksi.
+Gambar 8 Arsitektur sistem BENTARA (Flutter + Supabase)
+Rancangan Data (Model Data)
+Struktur data BENTARA dibangun di atas beberapa entity utama, yaitu User, Conversation, Message, Emergency, dan Voice Profile. Satu User dapat memiliki banyak Conversation; setiap Conversation memuat banyak Message; setiap catatan Emergency dan satu Voice Profile berelasi dengan User. History bukan entity tersendiri, melainkan agregasi kronologis dari Conversation beserta Message untuk menghindari duplikasi data. Rincian skema kolom (ERD) akan disusun pada dokumen basis data terpisah.
+Gambar 9 Entity Relationship Diagram (ERD) BENTARA
+Prediksi Hasil Implementasi
+Implementasi purwarupa BENTARA diproyeksikan menghasilkan capaian yang terukur pada tiga horizon waktu: capaian teknis jangka pendek pada akhir periode hackathon, dampak jangka menengah pada uji coba terbatas, serta dampak jangka panjang bagi pengembangan berkelanjutan.
+a. Capaian teknis pada akhir periode hackathon (jangka pendek). Purwarupa ditargetkan mampu mendemonstrasikan alur komunikasi dua arah secara utuh (end-to-end) dengan indikator keberhasilan sebagai berikut:
+Latensi satu giliran komunikasi (dari ucapan atau gestur masuk hingga keluaran diterima lawan bicara) ditargetkan di bawah 3 detik pada kondisi jaringan normal, sehingga interaksi terasa alami.
+Speech to Text memanfaatkan Android Speech API dengan target akurasi transkripsi Bahasa Indonesia ≥ 90% pada kalimat percakapan umum di lingkungan minim bising, sebanding dengan capaian mutakhir ASR Bahasa Indonesia (Darmawan dkk., 2025).
+Sign Recognition (versi terbatas) mengenali 15–20 kosakata atau gestur isyarat prioritas (mis. frasa layanan publik dan darurat) dengan target akurasi ≥ 85% pada kondisi demonstrasi, selaras dengan akurasi sistem berbasis MediaPipe dan LSTM pada literatur (Anithadevi dkk., 2025).
+AI Context Translation terbukti meningkatkan keterbacaan keluaran dibanding hasil mentah, divalidasi melalui pengujian kualitatif oleh tim dan perwakilan komunitas Teman Tuli.
+Ketersediaan fungsi inti pada perangkat (Speech to Text, Text to Speech, dan Sign Recognition) sehingga aplikasi tetap dapat didemonstrasikan meskipun koneksi terbatas.
+Kelengkapan fitur : seluruh fitur cakupan  dapat dijalankan dalam satu skenario percakapan utuh, termasuk Emergency Mode yang dapat diakses dalam dua ketukan dari halaman Home.
+b. Dampak jangka menengah (uji coba terbatas). Melalui uji coba bersama komunitas Teman Tuli dan mitra layanan publik, BENTARA diproyeksikan menurunkan waktu dan hambatan komunikasi pada situasi layanan (rumah sakit, kampus, kantor pemerintahan) dibanding metode manual seperti menulis atau menunggu juru bahasa isyarat, serta mempercepat respons pada situasi darurat. Indikator yang diukur mencakup tingkat keberhasilan penyelesaian percakapan (task completion rate) dan skor kepuasan pengguna (mis. System Usability Scale).
+c. Dampak jangka panjang (pengembangan berkelanjutan). Arsitektur modular BENTARA menjadi fondasi untuk memperluas kosakata isyarat, menambah kemampuan luring penuh, serta membuka jalan bagi fitur Future Roadmap (Avatar 3D, sinkronisasi cloud, AI Sign Tutor, dan integrasi perangkat wearable). Dengan demikian, BENTARA berpotensi berkembang dari purwarupa menjadi produk berkelanjutan yang berkontribusi nyata terhadap inklusivitas digital bagi lebih dari dua juta Teman Tuli di Indonesia.
+Peran dan Kontribusi Pihak Terkait
+Tim pengembang: merancang, membangun, dan mendemonstrasikan purwarupa.
+Dosen pembimbing: memberikan arahan teknis dan validasi kualitas gagasan.
+Komunitas Teman Tuli (mis. Gerkatin) dan juru bahasa isyarat: menjadi sumber validasi kebutuhan pengguna dan pengujian.
+Instansi layanan publik (rumah sakit, sekolah, pemerintahan): menjadi mitra uji coba dan calon pengguna.
+Tahapan Strategis Penerapan
+Penerapan BENTARA dilaksanakan secara bertahap dan terukur menggunakan metodologi Scrum yang terdiri atas delapan sprint selama delapan minggu, terhitung sejak pertengahan Juli hingga awal September 2026. Setiap sprint umumnya berdurasi satu minggu dan difokuskan pada satu kelompok fitur atau fondasi teknis tertentu, sehingga purwarupa dapat dibangun secara inkremental dengan pengujian berkelanjutan dan mitigasi risiko sejak dini. Pembagian pekerjaan yang jelas ini memudahkan tim kecil bekerja paralel pada modul-modul yang telah dirancang secara feature-first. Gambaran menyeluruh linimasa kedelapan sprint tersebut disajikan pada gambar berikut.
+Gambar 10 Timeline pengembangan delapan sprint BENTARA
+Rincian sasaran dan aktivitas pada masing-masing sprint diuraikan sebagai berikut:
+Sprint 1 – Persiapan Proyek dan Fondasi Arsitektur (Minggu 1): penyiapan repositori dan lingkungan pengembangan, penataan struktur proyek Flutter secara feature-first, serta perancangan awal arsitektur client-server dan skema data.
+Sprint 2 – Modul Authentication (Minggu 2): pembangunan fitur Login dan Registrasi dengan autentikasi berbasis token JWT yang dikelola melalui Supabase Auth.
+Sprint 3 – Communication: Speech to Text dan Text to Speech (Minggu 3): implementasi konversi ucapan menjadi teks dan teks menjadi suara menggunakan Android Speech API dan Android TTS secara native pada perangkat.
+Sprint 4 – AI Context Translation dan Integrasi Supabase (Minggu 4): pengembangan layanan penyesuaian konteks pada Supabase Edge Function serta integrasi basis data PostgreSQL untuk penyimpanan percakapan.
+Sprint 5 – Sign Recognition Terbatas (Minggu 5): pengenalan gestur bahasa isyarat pada kosakata terbatas menggunakan MediaPipe (hand landmarks) yang diklasifikasikan dengan model ringan.
+Sprint 6 – History, Quick Communication, dan Emergency Mode (Minggu 6): penyimpanan dan penampilan riwayat percakapan, penyediaan frasa siap pakai, serta akses cepat komunikasi pada situasi darurat.
+Sprint 7 – Profile, Settings, dan Penyempurnaan UI (Minggu 7): pengelolaan akun dan preferensi aplikasi, serta perbaikan antarmuka dan pengalaman pengguna (UI/UX).
+Sprint 8 – Integrasi End-to-End, Pengujian, dan Persiapan Demo (Minggu 7–8, ±1,5 minggu): penggabungan seluruh modul menjadi satu alur komunikasi yang utuh, pengujian menyeluruh, serta penyiapan demonstrasi. Sprint ini sengaja dibuat sedikit tumpang tindih dengan Sprint 7 agar pengujian berjalan paralel di akhir proyek dan tidak menunggu seluruh fitur selesai seratus persen.
+Melalui pendekatan bertahap ini, setiap tonggak pencapaian (milestone) dievaluasi pada akhir sprint melalui sprint review sehingga kualitas purwarupa tetap terjaga dan kesiapan demonstrasi pada akhir periode hackathon dapat dipastikan.
+KESIMPULAN
+BENTARA merupakan platform AI Communication Assistant yang dirancang untuk menjembatani komunikasi dua arah antara Teman Tuli dan Teman Dengar secara cepat, kontekstual, dan inklusif. Berbeda dari solusi terdahulu yang umumnya satu arah dan bergantung pada internet, BENTARA berfokus pada penyelesaian komunikasi yang utuh, dilengkapi mode darurat, frasa cepat, serta arah pengembangan menuju kemampuan luring. Dengan cakupan  yang realistis dan arsitektur modular yang terencana, gagasan ini layak diimplementasikan dan dikembangkan lebih lanjut sebagai kontribusi nyata terhadap terwujudnya transformasi digital yang berkelanjutan dan berkeadilan bagi Teman Tuli.
+DAFTAR PUSTAKA
+Afwan, T.M.A., Gernowo, R., Wibawa, H.A., 2026. Deep Learning-Based Recognition of Indonesian Sign Language (BISINDO) Alphabetic Gestures Using Skeletal Feature Extraction and LSTM. Jurnal Teknik Informatika (JUTIF) 7, 903–925.
+Anithadevi, N., Palanisamy, S., Saranya Rubini, S., Shrestha, S., 2025. MediaPipe-LSTM-Enhanced Framework for Real-Time Dynamic Sign Language Recognition in Inclusive Communication Systems. Engineering Reports 7, e70142.
+Darmawan, I., Rahmatulloh, A., Gunawan, R., Witjaksono, R.W., Nugraha, G.F., 2025. Indo-ASR+: Enhancing Indonesian Automatic Speech Recognition by Fine-Tuning Wav2Vec2 with FAdam. Journal of Advances in Information Technology (JAIT) 16, 1470–1478.
+Handayani, F., Tahir, M., Setiawan, A., 2024. Aksesibilitas untuk Teman Tuli di Ruang Publik. Al-Qalam: Jurnal Ilmiah Keagamaan dan Kemasyarakatan 18.
+Indonesia, K.S.R., 2020. Data Penyandang Disabilitas di Indonesia. Kementerian Sosial RI, Jakarta.
+Organization, W.H., 2024. Deafness and hearing loss. WHO, Geneva.
+Sari, C.A., 2024. Real-time detection of Indonesian sign language (ISL) gestures within SIBI using Long Short-Term Memory. Journal of Soft Computing Exploration (JOSCEX) 5.
+Swastikawara, S., 2025. Digital Sign Language Applications: Enhancing Inclusive Communication for the Deaf Community. Jurnal Penelitian dan Pengembangan Pendidikan Luar Biasa (JPPPLB) 12, 23–30.
+Wisudawati, L.M., Alhadar, A.M.S., 2026. Deteksi Bahasa Isyarat SIBI secara Real-Time Menggunakan MediaPipe Holistic dan LSTM. Jurnal Teknologi Informasi dan Ilmu Komputer (JTIIK) 13, 47–56.
+Zholshiyeva, L., 2025. Deep Learning-Based Continuous Sign Language Recognition. Journal of Robotics and Control (JRC) 6, 1106–1119.
