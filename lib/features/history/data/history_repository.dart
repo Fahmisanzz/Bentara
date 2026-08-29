@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
@@ -20,7 +21,7 @@ class HistoryRepository {
 
       return (response as List).map((e) => ConversationModel.fromJson(e)).toList();
     } catch (e) {
-      print('Error fetching conversations: $e');
+      debugPrint('Error fetching conversations: $e');
       return [];
     }
   }
@@ -30,7 +31,7 @@ class HistoryRepository {
       await _supabase.from('conversations').delete().eq('id', conversationId);
       return true;
     } catch (e) {
-      print('Error deleting conversation: $e');
+      debugPrint('Error deleting conversation: $e');
       return false;
     }
   }
@@ -45,7 +46,7 @@ class HistoryRepository {
 
       return (response as List).map((e) => MessageModel.fromJson(e)).toList();
     } catch (e) {
-      print('Error fetching messages: $e');
+      debugPrint('Error fetching messages: $e');
       return [];
     }
   }

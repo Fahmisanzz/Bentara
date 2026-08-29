@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
@@ -28,10 +29,10 @@ class TFLiteSignClassifierService implements ISignClassifierService {
       _interpreter = await Interpreter.fromAsset('assets/ml/model.tflite');
       final labelsData = await rootBundle.loadString('assets/ml/labels.txt');
       _labels = labelsData.split('\n').where((s) => s.trim().isNotEmpty).toList();
-      print('Model TFLite berhasil dimuat. Label: $_labels');
+      debugPrint('Model TFLite berhasil dimuat. Label: $_labels');
     } catch (e) {
-      print('Gagal memuat model TFLite: $e');
-      print('Pastikan file model.tflite dan labels.txt sudah dimasukkan ke folder assets/ml/');
+      debugPrint('Gagal memuat model TFLite: $e');
+      debugPrint('Pastikan file model.tflite dan labels.txt sudah dimasukkan ke folder assets/ml/');
     }
   }
 
@@ -131,7 +132,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
       }
       
     } catch (e) {
-      print('Terjadi kesalahan saat memproses TFLite: $e');
+      debugPrint('Terjadi kesalahan saat memproses TFLite: $e');
     } finally {
       _isProcessing = false;
     }

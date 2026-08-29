@@ -23,6 +23,7 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
   final IConversationRepository _conversationRepository;
   final Ref _ref;
   final _uuid = const Uuid();
+  bool _isConversationSavedInDb = false;
 
   CommunicationNotifier(this._sttService, this._ttsService, this._translationService, this._conversationRepository, this._ref)
       : super(CommunicationState.initial()) {
@@ -38,6 +39,7 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
 
   Future<void> loadConversation(String conversationId) async {
     state = state.copyWith(activeConversationId: conversationId, messages: [], isListening: false);
+    _isConversationSavedInDb = true;
     try {
       final historyRepo = _ref.read(historyRepoProvider);
       final historyMessages = await historyRepo.fetchMessagesForConversation(conversationId);
@@ -63,10 +65,9 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
   Future<void> _startNewConversation() async {
     final user = _ref.read(currentUserProvider);
     if (user != null) {
-      final convoId = await _conversationRepository.saveConversation('Sesi Komunikasi', user.id, contextStr: state.currentPreset.name);
-      state = state.copyWith(activeConversationId: convoId);
-      // Auto-refresh history so it appears immediately when user navigates back
-      _ref.read(historyListProvider.notifier).loadHistory();
+      final convoId = _uuid.v4();
+      state = state.copyWith(activeConversationId: convoId, messages: []);
+      _isConversationSavedInDb = false;
     }
   }
 
@@ -154,6 +155,12 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
 
     // Sync to DB
     if (state.activeConversationId != null) {
+      final user = _ref.read(currentUserProvider);
+      if (user != null && !_isConversationSavedInDb) {
+        await _conversationRepository.saveConversation('Sesi Komunikasi', user.id, contextStr: state.currentPreset.name, id: state.activeConversationId!);
+        _isConversationSavedInDb = true;
+        _ref.read(historyListProvider.notifier).loadHistory();
+      }
       _conversationRepository.saveMessage(state.activeConversationId!, newMessage);
     }
   }

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../models/chat_message_model.dart';
 import '../../providers/communication_provider.dart';
 import '../widgets/context_selector_bar.dart';
 import '../widgets/context_message_bubble.dart';
@@ -19,6 +18,16 @@ class CommunicationScreen extends ConsumerStatefulWidget {
 class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.conversationId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(communicationNotifierProvider.notifier).loadConversation(widget.conversationId!);
+      });
+    }
+  }
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {

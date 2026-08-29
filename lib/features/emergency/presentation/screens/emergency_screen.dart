@@ -72,6 +72,21 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
                 title: 'TOLONG HUBUNGI POLISI!',
                 onTap: () => notifier.activateEmergency('Tolong panggil polisi! Saya dalam bahaya!'),
               ),
+              const SizedBox(height: 16),
+              _EmergencyButton(
+                title: 'BAWA KE RUMAH SAKIT!',
+                onTap: () => notifier.activateEmergency('Tolong bawa saya ke rumah sakit terdekat!'),
+              ),
+              const SizedBox(height: 16),
+              _EmergencyButton(
+                title: 'SAYA TERLUKA!',
+                onTap: () => notifier.activateEmergency('Saya terluka parah, tolong bantu saya!'),
+              ),
+              const SizedBox(height: 16),
+              _EmergencyButton(
+                title: 'SAYA BUTUH BANTUAN!',
+                onTap: () => notifier.activateEmergency('Tolong, saya butuh bantuan segera!'),
+              ),
             ] else ...[
               const Icon(Icons.campaign, size: 120, color: Colors.white),
               const SizedBox(height: 24),

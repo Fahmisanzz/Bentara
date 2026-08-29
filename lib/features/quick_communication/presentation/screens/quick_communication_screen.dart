@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../models/quick_phrase_model.dart';
 import '../../providers/quick_communication_provider.dart';
 
 class QuickCommunicationScreen extends ConsumerWidget {

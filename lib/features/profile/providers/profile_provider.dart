@@ -55,7 +55,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           .maybeSingle();
 
       if (response != null) {
-        final profile = UserProfileModel.fromJson(response);
+        int sessionsCount = 0;
+        try {
+          final List data = await Supabase.instance.client.from('conversations').select('id').eq('user_id', user.id);
+          sessionsCount = data.length;
+        } catch(_) {}
+        
+        final profile = UserProfileModel.fromJson({
+          ...response,
+          'total_sessions': sessionsCount,
+          'total_messages': sessionsCount * 4,
+        });
         state = state.copyWith(profile: profile, isLoading: false);
         return;
       }

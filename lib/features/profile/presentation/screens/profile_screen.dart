@@ -64,8 +64,8 @@ class ProfileScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatColumn('Total Sesi', '12'),
-                      _buildStatColumn('Pesan Dikirim', '48'),
+                      _buildStatColumn('Total Sesi', profile.totalSessions.toString()),
+                      _buildStatColumn('Pesan Dikirim', profile.totalMessages.toString()),
                       _buildStatColumn('Bahasa', 'ID'),
                     ],
                   ),

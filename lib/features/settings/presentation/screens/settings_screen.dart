@@ -1,3 +1,4 @@
+import '../../../../core/services/local_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -26,7 +27,7 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Mode Kontras Tinggi'),
             subtitle: const Text('Gunakan warna pekat untuk memperjelas teks'),
             value: settings.enableHighContrast,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (val) => notifier.updateSettings(settings.copyWith(enableHighContrast: val)),
           ),
           ListTile(
@@ -75,14 +76,30 @@ class SettingsScreen extends ConsumerWidget {
           SwitchListTile(
             title: const Text('Getaran (Haptic Feedback)'),
             value: settings.enableHaptics,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (val) => notifier.updateSettings(settings.copyWith(enableHaptics: val)),
           ),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: Colors.red),
             title: const Text('Bersihkan Cache Lokal', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              // TODO: implement clear cache
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Bersihkan Cache?'),
+                  content: const Text('Semua pengaturan lokal akan dikembalikan ke bawaan.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Bersihkan', style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await ref.read(localStorageProvider).clear();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cache berhasil dibersihkan. Restart aplikasi untuk efek penuh.')));
+                }
+              }
             },
           ),
           ListTile(

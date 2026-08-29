@@ -43,9 +43,10 @@ class SpeechToTextService implements ISTTService {
       onResult: (result) {
         onResult(result.recognizedWords);
       },
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 3),
+      listenOptions: SpeechListenOptions(cancelOnError: false, partialResults: true),
       localeId: 'id_ID',
-      cancelOnError: false,
-      partialResults: true,
     );
   }
 

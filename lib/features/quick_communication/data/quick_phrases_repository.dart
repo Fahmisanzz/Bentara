@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/quick_phrase_model.dart';
 
@@ -17,7 +18,7 @@ class QuickPhrasesRepository {
 
       return (response as List).map((e) => QuickPhraseModel.fromJson(e)).toList();
     } catch (e) {
-      print('Failed to fetch quick phrases: $e');
+      debugPrint('Failed to fetch quick phrases: $e');
       return [];
     }
   }

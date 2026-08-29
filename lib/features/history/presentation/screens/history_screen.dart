@@ -73,7 +73,7 @@ class HistoryScreen extends ConsumerWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.secondary.withOpacity(0.2),
+                      backgroundColor: AppColors.secondary.withValues(alpha: 0.2),
                       child: const Icon(Icons.chat_bubble_outline, color: AppColors.secondary),
                     ),
                     title: Text(item.title ?? 'Percakapan Tanpa Judul', style: const TextStyle(fontWeight: FontWeight.bold)),

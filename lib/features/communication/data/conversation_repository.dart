@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/chat_message_model.dart';
 
 abstract class IConversationRepository {
-  Future<String> saveConversation(String title, String userId, {String? contextStr});
+  Future<String> saveConversation(String title, String userId, {String? contextStr, String? id});
   Future<void> saveMessage(String conversationId, ChatMessageModel message);
   Future<List<ChatMessageModel>> getConversationMessages(String conversationId);
 }
@@ -13,9 +14,10 @@ class SupabaseConversationRepository implements IConversationRepository {
   SupabaseConversationRepository(this._supabase);
 
   @override
-  Future<String> saveConversation(String title, String userId, {String? contextStr}) async {
+  Future<String> saveConversation(String title, String userId, {String? contextStr, String? id}) async {
     try {
       final response = await _supabase.from('conversations').insert({
+        'id': id ?? const Uuid().v4(),
         'title': title,
         'user_id': userId,
         'context': contextStr ?? 'general',

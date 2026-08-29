@@ -5,7 +5,7 @@ class CameraOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.secondary.withOpacity(0.5)
+      ..color = AppColors.secondary.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
 
@@ -24,7 +24,7 @@ class CameraOverlayPainter extends CustomPainter {
     
     // Draw semi-transparent overlay outside the box
     final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
+      ..color = Colors.black.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
       
     final outerPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));

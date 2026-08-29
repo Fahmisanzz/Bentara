@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,7 +48,7 @@ Aturan ketat:
           }),
         ).timeout(const Duration(seconds: 8));
 
-        print('[BENTARA AI] Groq Status: ${response.statusCode}');
+        debugPrint('[BENTARA AI] Groq Status: ${response.statusCode}');
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -59,20 +60,20 @@ Aturan ketat:
             clean = clean.replaceAll('"', '');
             clean = clean.trim();
             if (clean.isNotEmpty) {
-              print('[BENTARA AI] Translated: $clean');
+              debugPrint('[BENTARA AI] Translated: $clean');
               return clean;
             }
           }
         } else {
-          print('[BENTARA AI] Groq Error ${response.statusCode}: ${response.body}');
+          debugPrint('[BENTARA AI] Groq Error ${response.statusCode}: ${response.body}');
         }
       }
     } catch (e) {
-      print('[BENTARA AI] Groq API exception: $e');
+      debugPrint('[BENTARA AI] Groq API exception: $e');
     }
 
     // Fallback ke rule-based jika API gagal
-    print('[BENTARA AI] Using rule-based fallback');
+    debugPrint('[BENTARA AI] Using rule-based fallback');
     return _ruleBasedFallback(rawText, preset);
   }
 
