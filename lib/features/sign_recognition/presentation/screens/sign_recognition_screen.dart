@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../providers/sign_recognition_provider.dart';
 import '../../../../features/communication/providers/communication_provider.dart';
 import '../widgets/camera_overlay_painter.dart';
-import '../widgets/recognized_text_banner.dart';
 
 class SignRecognitionScreen extends ConsumerStatefulWidget {
   const SignRecognitionScreen({super.key});
@@ -14,23 +14,54 @@ class SignRecognitionScreen extends ConsumerStatefulWidget {
   ConsumerState<SignRecognitionScreen> createState() => _SignRecognitionScreenState();
 }
 
-class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen> {
+class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _scanController;
+  late final Animation<double> _scanAnimation;
+
   @override
   void initState() {
     super.initState();
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+
+    _scanAnimation = Tween<double>(begin: 0.05, end: 0.95).animate(
+      CurvedAnimation(parent: _scanController, curve: Curves.easeInOut),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(signRecognitionNotifierProvider.notifier).initializeCamera();
     });
   }
 
   @override
+  void dispose() {
+    _scanController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(signRecognitionNotifierProvider);
     final notifier = ref.read(signRecognitionNotifierProvider.notifier);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.white,
+    ));
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Stack(
           children: [
             // 1. Camera Preview
@@ -46,146 +77,270 @@ class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen> {
                 ),
               )
             else
-              const Center(
-                child: CircularProgressIndicator(color: AppColors.secondary),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(color: AppColors.lightBlue),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.errorMessage ?? 'Membuka Kamera Bentara...',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
 
-            // 2. Camera Overlay (Guides user where to place hands)
+            // 2. Camera Overlay with Laser Animation
             if (state.isCameraInitialized)
-              CustomPaint(
-                size: Size.infinite,
-                painter: CameraOverlayPainter(),
+              AnimatedBuilder(
+                animation: _scanAnimation,
+                builder: (context, child) {
+                  return CustomPaint(
+                    size: Size.infinite,
+                    painter: CameraOverlayPainter(
+                      scanAnimationValue: state.isDetecting ? _scanAnimation.value : 0.5,
+                    ),
+                  );
+                },
               ),
 
-            // 3. Top Action Bar
+            // 3. Top Action Bar (Solid Opaque Buttons)
             Positioned(
-              top: 16,
+              top: MediaQuery.paddingOf(context).top + 12,
               left: 16,
               right: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.black54,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
+                  // Close Button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0C0C0C).withValues(alpha: 0.7),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white24, width: 1),
+                        ),
+                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                      ),
                     ),
                   ),
+
+                  // AI Status Badge (Indonesian)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: const Color(0xFF0C0C0C).withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), width: 1),
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: state.isDetecting ? Colors.red : Colors.grey,
+                            color: state.isCameraInitialized
+                                ? (state.isDetecting ? const Color(0xFF4BA95F) : Colors.amber)
+                                : Colors.grey,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
-                          state.isDetecting ? 'AI Aktif' : 'Memproses...',
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          !state.isCameraInitialized
+                              ? 'Memuat Kamera...'
+                              : (state.isDetecting ? 'AI AKTIF — Memindai' : 'AI Pause'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  CircleAvatar(
-                    backgroundColor: Colors.black54,
-                    child: IconButton(
-                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
-                      onPressed: state.isCameraInitialized ? notifier.flipCamera : null,
+
+                  // Flip Camera Button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: state.isCameraInitialized ? notifier.flipCamera : null,
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.flip_camera_ios_rounded, color: Colors.white, size: 22),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // 4. Live Banner for newest gesture
-            if (state.currentGesture != null)
-              Positioned(
-                top: 80,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: RecognizedTextBanner(gesture: state.currentGesture!),
-                ),
-              ),
-
-            // 5. Bottom Panel (Composed Sentence & TTS)
+            // 4. Solid White Bottom Result Panel
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
                 decoration: const BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32.0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 16,
+                      offset: Offset(0, -4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Kalimat Dikenali:',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                    // Header row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'KALIMAT TERDETEKSI',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        if (state.composedSentence.isNotEmpty)
+                          GestureDetector(
+                            onTap: notifier.clearSentence,
+                            child: const Text(
+                              'Hapus',
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
+
+                    // Recognized Sentence Container
                     Container(
-                      constraints: const BoxConstraints(minHeight: 60),
-                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(minHeight: 56),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        color: const Color(0xFFF4F8FC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: state.composedSentence.isNotEmpty
+                              ? AppColors.primary.withValues(alpha: 0.4)
+                              : const Color(0xFFE2E8F0),
+                          width: 1.2,
+                        ),
                       ),
                       child: Text(
-                        state.composedSentence.isEmpty ? 'Mulai lakukan gerakan...' : state.composedSentence,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: state.composedSentence.isEmpty ? Colors.grey : AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
+                        state.composedSentence.isEmpty
+                            ? 'Posisikan tangan di dalam area pemindaian...'
+                            : state.composedSentence,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: state.composedSentence.isEmpty
+                              ? AppColors.textSecondary.withValues(alpha: 0.6)
+                              : AppColors.textPrimary,
+                          height: 1.3,
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Action Buttons Row (Solid Opaque Buttons)
                     Row(
                       children: [
+                        // Tombol Suara (TTS)
                         Expanded(
                           flex: 1,
-                          child: OutlinedButton.icon(
-                            onPressed: state.composedSentence.isEmpty || !state.isDetecting ? null : notifier.speakSentence,
-                            icon: const Icon(Icons.volume_up, size: 18),
-                            label: const Text('Suara'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              foregroundColor: AppColors.secondary,
-                              side: const BorderSide(color: AppColors.secondary),
+                          child: SizedBox(
+                            height: 50,
+                            child: OutlinedButton.icon(
+                              onPressed: state.composedSentence.isEmpty ? null : notifier.speakSentence,
+                              icon: const Icon(Icons.volume_up_rounded, size: 20),
+                              label: const Text('Suara'),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColors.primary,
+                                disabledForegroundColor: Colors.grey.shade400,
+                                side: BorderSide(
+                                  color: state.composedSentence.isEmpty
+                                      ? Colors.grey.shade300
+                                      : AppColors.primary,
+                                  width: 1.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
+
+                        // Tombol Kirim ke Chat
                         Expanded(
                           flex: 2,
-                          child: ElevatedButton.icon(
-                            onPressed: state.composedSentence.isEmpty || !state.isDetecting ? null : () {
-                              // Integrasi End-to-End: Kirim ke riwayat chat
-                              ref.read(communicationNotifierProvider.notifier).sendTextAndSpeak(state.composedSentence);
-                              Navigator.of(context).pop(); // Tutup layar kamera
-                            },
-                            icon: const Icon(Icons.send),
-                            label: const Text('Kirim ke Chat'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: SizedBox(
+                            height: 50,
+                            child: ElevatedButton.icon(
+                              onPressed: state.composedSentence.isEmpty
+                                  ? null
+                                  : () {
+                                      ref.read(communicationNotifierProvider.notifier).sendTextAndSpeak(state.composedSentence);
+                                      Navigator.of(context).pop();
+                                    },
+                              icon: const Icon(Icons.send_rounded, size: 20),
+                              label: const Text('Kirim ke Chat'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey.shade200,
+                                disabledForegroundColor: Colors.grey.shade400,
+                                elevation: state.composedSentence.isEmpty ? 0 : 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ),

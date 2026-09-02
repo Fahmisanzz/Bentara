@@ -10,12 +10,15 @@ class EmergencyNotifier extends StateNotifier<bool> {
   final Ref _ref;
   Timer? _loopTimer;
   bool _isFlashing = false;
+  String _activeMessage = 'Tolong, saya butuh bantuan segera!';
 
   EmergencyNotifier(this._ref) : super(false);
 
   bool get isFlashing => _isFlashing;
+  String get activeMessage => _activeMessage;
 
   void activateEmergency(String message) {
+    _activeMessage = message;
     state = true;
     _isFlashing = true;
     

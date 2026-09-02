@@ -13,39 +13,52 @@ class ContextSelectorBar extends ConsumerWidget {
     final notifier = ref.read(communicationNotifierProvider.notifier);
 
     return Container(
-      height: 60,
-      color: AppColors.surface,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: ContextPreset.values.length,
-        itemBuilder: (context, index) {
-          final preset = ContextPreset.values[index];
-          final isSelected = commState.currentPreset == preset;
+      height: 56,
+      color: Colors.white,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false, overscroll: false),
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: ContextPreset.values.length,
+          itemBuilder: (context, index) {
+            final preset = ContextPreset.values[index];
+            final isSelected = commState.currentPreset == preset;
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: Text(preset.label),
-              avatar: Icon(
-                preset.icon,
-                color: isSelected ? AppColors.surface : AppColors.primary,
-                size: 18,
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: ChoiceChip(
+                label: Text(preset.label),
+                avatar: Icon(
+                  preset.icon,
+                  color: isSelected ? Colors.white : AppColors.primary,
+                  size: 18,
+                ),
+                selected: isSelected,
+                selectedColor: AppColors.primary,
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                    width: 1.0,
+                  ),
+                ),
+                showCheckmark: false,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black87,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+                onSelected: (selected) {
+                  if (selected) {
+                    notifier.setContextPreset(preset);
+                  }
+                },
               ),
-              selected: isSelected,
-              selectedColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.surface : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              onSelected: (selected) {
-                if (selected) {
-                  notifier.setContextPreset(preset);
-                }
-              },
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

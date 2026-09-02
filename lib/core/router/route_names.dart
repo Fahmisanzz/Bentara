@@ -3,6 +3,7 @@ class RouteNames {
   static const String onboarding = 'onboarding';
   static const String login = 'login';
   static const String register = 'register';
+  static const String forgotPassword = 'forgot_password';
   static const String home = 'home';
   static const String communication = 'communication';
   static const String signRecognition = 'sign_recognition';

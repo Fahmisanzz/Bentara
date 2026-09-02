@@ -55,6 +55,16 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     }
   }
 
+  Future<void> resetPassword(String email) async {
+    state = const AuthLoading();
+    try {
+      await _authRepository.resetPassword(email);
+      state = const Unauthenticated();
+    } catch (e) {
+      state = const AuthError('Gagal mengirim link reset. Silakan coba lagi.');
+    }
+  }
+
   Future<void> signOut() async {
     state = const AuthLoading();
     try {

@@ -7,6 +7,7 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/communication/presentation/screens/communication_screen.dart';
 import '../../features/sign_recognition/presentation/screens/sign_recognition_screen.dart';
@@ -32,6 +33,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToRegister = state.matchedLocation == '/register';
+      final isGoingToForgotPassword = state.matchedLocation == '/forgot-password';
       final isGoingToSplash = state.matchedLocation == '/';
       final isGoingToOnboarding = state.matchedLocation == '/onboarding';
 
@@ -39,14 +41,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthInitial) return null;
 
       // Allow users to access public routes
-      final isPublicRoute = isGoingToLogin || isGoingToRegister || isGoingToSplash || isGoingToOnboarding;
+      final isPublicRoute = isGoingToLogin || isGoingToRegister || isGoingToForgotPassword || isGoingToSplash || isGoingToOnboarding;
 
       if (!isAuth && !isPublicRoute && !isAuthLoading) {
         // Unauthenticated users trying to access protected routes go to login
         return '/login';
       }
 
-      if (isAuth && (isGoingToLogin || isGoingToRegister || isGoingToSplash)) {
+      if (isAuth && (isGoingToLogin || isGoingToRegister || isGoingToSplash || isGoingToOnboarding)) {
         // Authenticated users trying to access auth/splash routes go to home
         return '/home';
       }
@@ -73,6 +75,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         name: RouteNames.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/home',

@@ -23,6 +23,7 @@ dependencies:
   camera: ^0.10.5
   tflite_flutter: ^0.12.1
   image: ^4.9.2
+  flutter_svg: ^2.0.10+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,3 +34,6 @@ flutter:
   assets:
     - .env
     - assets/ml/
+    - assets/images/
+    - assets/logos/
+    - assets/button/

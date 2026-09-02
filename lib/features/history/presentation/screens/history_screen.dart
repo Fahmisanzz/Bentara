@@ -5,6 +5,8 @@ import '../../providers/history_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 
+import 'package:flutter/services.dart';
+
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
@@ -12,19 +14,47 @@ class HistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(historyListProvider);
 
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.white,
+    ));
+
     return Scaffold(
+      backgroundColor: AppColors.accentPink, // LAYER 1
       appBar: AppBar(
-        title: const Text('Riwayat Percakapan'),
-        backgroundColor: AppColors.primary,
+        title: const Text('Riwayat Percakapan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+        backgroundColor: AppColors.accentPink,
         foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
       ),
-      body: historyAsync.when(
-        data: (items) {
-          if (items.isEmpty) {
-            return const Center(child: Text('Belum ada riwayat percakapan.'));
-          }
+      body: Container(
+        // LAYER 2
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32.0)),
+        ),
+        child: historyAsync.when(
+          data: (items) {
+            if (items.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.history_rounded, size: 48, color: Colors.black26),
+                    SizedBox(height: 16),
+                    Text('Belum ada riwayat percakapan.', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              );
+            }
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
@@ -65,20 +95,36 @@ class HistoryScreen extends ConsumerWidget {
                 onDismissed: (direction) {
                   ref.read(historyListProvider.notifier).deleteConversation(item.id);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Percakapan dihapus'), backgroundColor: AppColors.secondary),
+                    const SnackBar(content: Text('Percakapan dihapus'), backgroundColor: AppColors.accentPink),
                   );
                 },
-                child: Card(
+                child: Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFEBEFF4), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.secondary.withValues(alpha: 0.2),
-                      child: const Icon(Icons.chat_bubble_outline, color: AppColors.secondary),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentPink.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.history_rounded, color: AppColors.accentPink, size: 22),
                     ),
-                    title: Text(item.title ?? 'Percakapan Tanpa Judul', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(item.context ?? 'General', maxLines: 1, overflow: TextOverflow.ellipsis),
-                    trailing: Text('${item.startedAt.day}/${item.startedAt.month}', style: const TextStyle(color: Colors.grey)),
+                    title: Text(item.title ?? 'Percakapan Tanpa Judul', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    subtitle: Text(item.context ?? 'Umum', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    trailing: Text('${item.startedAt.day}/${item.startedAt.month}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     onTap: () {
                       context.pushNamed(
                         RouteNames.communication,
@@ -91,9 +137,10 @@ class HistoryScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.accentPink)),
+        error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
       ),
-    );
+    ),
+  );
   }
 }

@@ -5,54 +5,72 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/auth_state.dart';
 
 /// ============================================================
-/// BENTARA — SIGN IN SCREEN
+/// BENTARA — FORGOT PASSWORD SCREEN
 /// ============================================================
-/// Halaman login user dengan photographic background.
-/// Menggunakan template & design system yang SAMA DENGAN Sign Up.
+/// Halaman pemulihan kata sandi dengan photographic background.
+/// Menggunakan template & design system yang SAMA DENGAN Sign In/Up.
+/// 100% Bahasa Indonesia.
 /// ============================================================
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  // === Form State (JANGAN UBAH) ===
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  // === Password Visibility State ===
-  bool _isPasswordVisible = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
-  // === SUBMIT LOGIC (JANGAN UBAH) ===
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      ref.read(authNotifierProvider.notifier).signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      try {
+        await ref
+            .read(authRepositoryProvider)
+            .resetPassword(_emailController.text.trim());
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Link reset kata sandi telah dikirim ke emailmu.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal mengirim link reset. Silakan coba lagi.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
     }
   }
 
-  // =========================================================
-  // === HELPER: Translucent Input Decoration ===
-  // Digunakan oleh email & password field.
-  // =========================================================
   InputDecoration _buildInputDecoration({
     required String hintText,
-    Widget? suffixIcon,
   }) {
     return InputDecoration(
       hintText: hintText,
@@ -66,7 +84,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         horizontal: 20.0,
         vertical: 22.0,
       ),
-      suffixIcon: suffixIcon,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6.0),
         borderSide: BorderSide(
@@ -95,24 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
     final size = MediaQuery.sizeOf(context);
     final formWidth = size.width * 0.74;
     final leftMargin = math.max(36.0, size.width * 0.13);
-
-    // === Error Handling (JANGAN UBAH) ===
-    ref.listen<AppAuthState>(authNotifierProvider, (previous, next) {
-      if (next is AuthError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    });
-
-    final isLoading = authState is AuthLoading;
 
     return Scaffold(
       resizeToAvoidBottomInset: false, // PREVENT UI JUMP/SCROLL ON KEYBOARD
@@ -172,10 +174,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // =============================================
+                            // === 4. TOP SPACING ===
+                            // =============================================
                             const Spacer(flex: 7),
-                            
-                            const Text(
-                              'SIGN IN',
+
+                            // =============================================
+                            // === 5. PAGE TITLE — "LUPA PASSWORD" ===
+                            // =============================================
+                            Text(
+                              'LUPA\nPASSWORD',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 42.0,
@@ -184,16 +192,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 1.0,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black38,
-                                    offset: Offset(0, 2.0),
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    offset: const Offset(0, 2.0),
                                     blurRadius: 6.0,
                                   ),
                                 ],
                               ),
                             ),
+
+                            // =============================================
+                            // === 6. SPACING: TITLE → TAGLINE ===
+                            // =============================================
                             const SizedBox(height: 8.0),
-                            const Text(
-                              'Menjembatani komunikasi,\nmendekatkan hati',
+
+                            // =============================================
+                            // === 7. TAGLINE ===
+                            // =============================================
+                            Text(
+                              'Masukan alamat emailmu',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 14.5,
@@ -201,16 +217,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 letterSpacing: 0.2,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black45,
-                                    offset: Offset(0, 1.0),
+                                    color: Colors.black.withValues(alpha: 0.40),
+                                    offset: const Offset(0, 1.0),
                                     blurRadius: 3.0,
                                   ),
                                 ],
                               ),
                             ),
+
+                            // =============================================
+                            // === 8. SPACING: TAGLINE → INFO RESET ===
+                            // =============================================
                             const SizedBox(height: 30.0),
 
-                            // === EMAIL INPUT ===
+                            // =============================================
+                            // === 9. INFORMASI RESET ===
+                            // =============================================
+                            Text(
+                              'Cek email untuk reset kata sandi',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w400,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    offset: const Offset(0, 1.0),
+                                    blurRadius: 3.0,
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // =============================================
+                            // === 10. SPACING: INFO → EMAIL FIELD ===
+                            // =============================================
+                            const SizedBox(height: 12.0),
+
+                            // =============================================
+                            // === 11. EMAIL INPUT ===
+                            // =============================================
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
@@ -222,67 +268,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 hintText: 'alamat email',
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty) return 'Email is required';
-                                if (!value.contains('@')) return 'Enter a valid email';
+                                if (value == null || value.isEmpty) {
+                                  return 'Masukkan alamat email terlebih dahulu.';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Format email tidak valid.';
+                                }
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 16.0),
 
-                            // === PASSWORD INPUT ===
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: !_isPasswordVisible,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15.0,
-                              ),
-                              decoration: _buildInputDecoration(
-                                hintText: 'password',
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                                    color: Colors.white70,
-                                    size: 20.0,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isPasswordVisible = !_isPasswordVisible;
-                                    });
-                                  },
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'Password is required';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 12.0),
-
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: GestureDetector(
-                                onTap: () => context.push('/forgot-password'),
-                                behavior: HitTestBehavior.opaque,
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 6.0),
-                                  child: Text(
-                                    'Lupa Password?',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                            // =============================================
+                            // === 12. SPACING: EMAIL FIELD → CTA ===
+                            // =============================================
                             const SizedBox(height: 32.0),
 
-                            // === SIGN IN BUTTON + LOGO ===
+                            // =============================================
+                            // === 13. CTA GROUP: KIRIM LINK RESET + LOGO ===
+                            // =============================================
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                // --- Button KIRIM LINK RESET ---
                                 Flexible(
                                   child: ConstrainedBox(
                                     constraints: const BoxConstraints(maxWidth: 200.0),
@@ -290,29 +297,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       width: double.infinity,
                                       height: 58.0,
                                       child: ElevatedButton(
-                                        onPressed: isLoading ? null : _submit,
+                                        onPressed: _isSubmitting ? null : _submit,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.primary,
                                           foregroundColor: Colors.white,
+                                          disabledBackgroundColor:
+                                              AppColors.primary.withValues(alpha: 0.6),
                                           elevation: 3.0,
-                                          shadowColor: AppColors.primary.withValues(alpha: 0.40),
+                                          shadowColor:
+                                              AppColors.primary.withValues(alpha: 0.40),
                                           shape: const StadiumBorder(),
                                         ),
-                                        child: isLoading
+                                        child: _isSubmitting
                                             ? const SizedBox(
                                                 width: 22,
                                                 height: 22,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2.5,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<Color>(Colors.white),
                                                 ),
                                               )
                                             : const Text(
-                                                'SIGN IN',
+                                                'KIRIM LINK RESET',
                                                 style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 14.0,
                                                   fontWeight: FontWeight.w700,
-                                                  letterSpacing: 0.8,
+                                                  letterSpacing: 0.5,
+                                                  color: Colors.white,
                                                 ),
                                               ),
                                       ),
@@ -320,45 +332,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 16.0),
+                                // --- Logo BENTARA ---
                                 Image.asset(
-                                  'assets/logos/logo_bentara_biru.webp', // As per user request: Gunakan logo Bentara yang sudah digunakan
+                                  'assets/logos/logo_bentara_biru.webp',
                                   height: 40.0,
                                   fit: BoxFit.contain,
                                 ),
                               ],
                             ),
 
+                            // =============================================
+                            // === 14. FLEXIBLE SPACE & BOTTOM ===
+                            // =============================================
                             const SizedBox(height: 16.0),
                             const Spacer(flex: 4),
 
-                            // === BOTTOM AUTH LINK ===
+                            // =============================================
+                            // === 15. BOTTOM RETURN LINK ===
+                            // =============================================
                             Center(
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Belum punya akun?',
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  } else {
+                                    context.pushNamed(RouteNames.login);
+                                  }
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    'Kembali ke Sign In',
                                     style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14.0,
+                                      color: Colors.white,
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: Colors.white,
+                                      decorationThickness: 1.5,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.35),
+                                          offset: const Offset(0, 1.0),
+                                          blurRadius: 3.0,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 6.0),
-                                  GestureDetector(
-                                    onTap: () => context.pushNamed(RouteNames.register),
-                                    child: const Text(
-                                      'Buat Akun',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w700,
-                                        decoration: TextDecoration.underline,
-                                        decorationColor: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
+
+                            // =============================================
+                            // === 16. BOTTOM SPACING ===
+                            // =============================================
                             const SizedBox(height: 36.0),
                           ],
                         ),
@@ -366,6 +394,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // =============================================================
+            // === BACK BUTTON OVERLAY (POJOK KIRI ATAS) ===
+            // =============================================================
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8.0,
+              left: 12.0,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 24.0,
+                ),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.pushNamed('login');
+                  }
+                },
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 abstract class IAuthRepository {
   Future<UserModel> signInWithEmail(String email, String password);
   Future<UserModel> signUpWithEmail(String name, String email, String password, UserRole role);
+  Future<void> resetPassword(String email);
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
   Stream<AuthState> get authStateChanges;
@@ -28,7 +29,7 @@ class SupabaseAuthRepository implements IAuthRepository {
       if (response.user == null) {
         throw app_err.AuthException('Login failed. User not found.');
       }
-      return _fetchUserMetadata(response.user!.id, email);
+      return await _fetchUserMetadata(response.user!.id, email);
     } on AuthException {
       rethrow;
     } catch (e) {
@@ -60,6 +61,15 @@ class SupabaseAuthRepository implements IAuthRepository {
         role: role,
         createdAt: DateTime.now(),
       );
+    } catch (e) {
+      throw app_err.AuthException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email) async {
+    try {
+      await _supabase.auth.resetPasswordForEmail(email);
     } catch (e) {
       throw app_err.AuthException(e.toString());
     }

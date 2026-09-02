@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -13,6 +12,98 @@ abstract class ISignClassifierService {
   Future<void> dispose();
 }
 
+// -----------------------------------------------------------------------------
+// FUNGSI ISOLATE TOP-LEVEL (Jalan di Background Thread agar UI tidak Lag)
+// -----------------------------------------------------------------------------
+Future<Float32List?> _processImageInIsolate(Map<String, dynamic> params) async {
+  try {
+    final int width = params['width'];
+    final int height = params['height'];
+    final String format = params['format'];
+    final List<Uint8List> planeBytes = params['planeBytes'];
+    final List<int> bytesPerRow = params['bytesPerRow'];
+    final List<int?> bytesPerPixel = params['bytesPerPixel'];
+    final int sensorOrientation = params['sensorOrientation'];
+    const int inputSize = 224;
+
+    img.Image? imgBase;
+
+    // 1. Direct Downsampled YUV420 Conversion to 224x224 (Blazingly Fast)
+    if (format == 'yuv420') {
+      imgBase = img.Image(width: inputSize, height: inputSize);
+      final int uvRowStride = bytesPerRow[1];
+      final int uvPixelStride = bytesPerPixel[1] ?? 1;
+
+      final double scaleX = width / inputSize;
+      final double scaleY = height / inputSize;
+
+      for (int y = 0; y < inputSize; y++) {
+        final int origY = (y * scaleY).toInt().clamp(0, height - 1);
+        final int yIndexOffset = origY * bytesPerRow[0];
+        final int uvRowOffset = uvRowStride * (origY ~/ 2);
+
+        for (int x = 0; x < inputSize; x++) {
+          final int origX = (x * scaleX).toInt().clamp(0, width - 1);
+          final int uvIndex = uvPixelStride * (origX ~/ 2) + uvRowOffset;
+          final int index = yIndexOffset + origX;
+
+          final yp = planeBytes[0][index];
+          final up = planeBytes[1][uvIndex];
+          final vp = planeBytes[2][uvIndex];
+
+          int r = (yp + vp * 1436 / 1024 - 179).round();
+          int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91).round();
+          int b = (yp + up * 1814 / 1024 - 227).round();
+
+          imgBase.setPixelRgb(
+            x, 
+            y, 
+            r.clamp(0, 255), 
+            g.clamp(0, 255), 
+            b.clamp(0, 255)
+          );
+        }
+      }
+    } else if (format == 'bgra8888') {
+      final rawImg = img.Image.fromBytes(
+        width: width,
+        height: height,
+        bytes: planeBytes[0].buffer,
+        order: img.ChannelOrder.bgra,
+      );
+      imgBase = img.copyResizeCropSquare(rawImg, size: inputSize);
+    }
+
+    if (imgBase == null) return null;
+
+    // 2. Rotasi jika diperlukan
+    if (sensorOrientation != 0) {
+      imgBase = img.copyRotate(imgBase, angle: sensorOrientation);
+    }
+
+    img.Image resizedImage = imgBase;
+
+    // 4. Konversi ke Tensor Float32List
+    var convertedBytes = Float32List(1 * inputSize * inputSize * 3);
+    var buffer = Float32List.view(convertedBytes.buffer);
+    int pixelIndex = 0;
+    
+    for (int i = 0; i < inputSize; i++) {
+      for (int j = 0; j < inputSize; j++) {
+        var pixel = resizedImage.getPixel(j, i);
+        buffer[pixelIndex++] = (pixel.r / 127.5) - 1.0;
+        buffer[pixelIndex++] = (pixel.g / 127.5) - 1.0;
+        buffer[pixelIndex++] = (pixel.b / 127.5) - 1.0;
+      }
+    }
+
+    return convertedBytes;
+  } catch (e) {
+    debugPrint('Error in isolate: $e');
+    return null;
+  }
+}
+
 class TFLiteSignClassifierService implements ISignClassifierService {
   Interpreter? _interpreter;
   List<String>? _labels;
@@ -20,8 +111,6 @@ class TFLiteSignClassifierService implements ISignClassifierService {
   DateTime _lastDetectionTime = DateTime.now();
   String? _previousLabel;
   int _consecutiveCount = 0;
-  
-  static const int inputSize = 224; // Ukuran standar model Teachable Machine
 
   @override
   Future<void> initialize() async {
@@ -40,7 +129,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
   void processCameraImage(CameraImage image, int sensorOrientation, Function(SignGestureResult?) onResult) async {
     if (_isProcessing || _interpreter == null || _labels == null) return;
     
-    // Batasi 2 frame per detik agar UI tidak macet saat konversi gambar
+    // Batasi 2 frame per detik agar hemat resource CPU
     if (DateTime.now().difference(_lastDetectionTime).inMilliseconds < 500) {
       return;
     }
@@ -48,34 +137,44 @@ class TFLiteSignClassifierService implements ISignClassifierService {
     _isProcessing = true;
 
     try {
-      // 1. Konversi format kamera (YUV/BGRA) ke format gambar standar (RGB)
-      img.Image? convertedImage = _convertCameraImage(image);
-      
-      if (convertedImage == null) {
+      String format;
+      if (image.format.group == ImageFormatGroup.yuv420) {
+        format = 'yuv420';
+      } else if (image.format.group == ImageFormatGroup.bgra8888) {
+        format = 'bgra8888';
+      } else {
         _isProcessing = false;
         return;
       }
 
-      // 2. Putar gambar agar sesuai posisi asli sensor HP
-      if (sensorOrientation != 0) {
-        convertedImage = img.copyRotate(convertedImage, angle: sensorOrientation);
+      // Siapkan data mentah untuk dikirim ke Isolate
+      final isolateParams = {
+        'width': image.width,
+        'height': image.height,
+        'format': format,
+        'planeBytes': image.planes.map((p) => p.bytes).toList(),
+        'bytesPerRow': image.planes.map((p) => p.bytesPerRow).toList(),
+        'bytesPerPixel': image.planes.map((p) => p.bytesPerPixel).toList(),
+        'sensorOrientation': sensorOrientation,
+      };
+
+      // LEMPAR PROSES BERAT KE BACKGROUND THREAD (COMPUTE)
+      final inputTensor = await compute(_processImageInIsolate, isolateParams);
+
+      if (inputTensor == null) {
+        _isProcessing = false;
+        return;
       }
 
-      // 3. Potong (Crop) dan sesuaikan ukuran (Resize) menjadi 224x224 pixel
-      img.Image resizedImage = img.copyResizeCropSquare(convertedImage, size: inputSize);
-
-      // 4. Siapkan Tensor Input (Ubah piksel RGB menjadi rentang -1 hingga 1)
-      var inputTensor = _imageToByteListFloat32(resizedImage, inputSize);
+      // Kembali ke Main Thread, siapkan buffer
       var inputBuffer = inputTensor.buffer.asUint8List();
-
-      // 5. Siapkan Tensor Output
       var outputShape = _interpreter!.getOutputTensor(0).shape; // misal: [1, 5]
       var outputBuffer = List.filled(outputShape[1], 0.0).reshape(outputShape);
 
-      // 6. Jalankan Inferensi (Prediksi)
+      // Jalankan Inferensi
       _interpreter!.run(inputBuffer, outputBuffer);
 
-      // 7. Ambil probabilitas tertinggi
+      // Ambil probabilitas tertinggi
       List<double> probabilities = (outputBuffer[0] as List).cast<double>();
       
       double maxProb = 0.0;
@@ -88,7 +187,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
         }
       }
 
-      // 8. Tentukan Hasil (Ambang batas ditingkatkan ke 90% dan wajib 2 frame berturut-turut stabil)
+      // Tentukan Hasil
       if (maxProb > 0.90 && maxIndex < _labels!.length) {
         String label = _labels![maxIndex];
         
@@ -107,7 +206,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
           _consecutiveCount = 1;
         }
 
-        // Butuh 2 frame berturut-turut untuk validasi (mencegah kedipan atau false positive wajah)
+        // Butuh 2 frame berturut-turut untuk validasi
         if (_consecutiveCount >= 2) {
           if (SignVocabulary.dictionary.containsKey(label)) {
              final result = SignGestureResult(
@@ -136,74 +235,6 @@ class TFLiteSignClassifierService implements ISignClassifierService {
     } finally {
       _isProcessing = false;
     }
-  }
-
-  // --- FUNGSI UTILITAS KONVERSI GAMBAR KAMERA ---
-
-  img.Image? _convertCameraImage(CameraImage image) {
-    if (image.format.group == ImageFormatGroup.yuv420) {
-      return _convertYUV420(image);
-    } else if (image.format.group == ImageFormatGroup.bgra8888) {
-      return _convertBGRA8888(image);
-    }
-    return null;
-  }
-
-  img.Image _convertBGRA8888(CameraImage image) {
-    return img.Image.fromBytes(
-      width: image.width,
-      height: image.height,
-      bytes: image.planes[0].bytes.buffer,
-      order: img.ChannelOrder.bgra,
-    );
-  }
-
-  img.Image _convertYUV420(CameraImage image) {
-    final int width = image.width;
-    final int height = image.height;
-    final int uvRowStride = image.planes[1].bytesPerRow;
-    final int uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-    final img.Image imgBase = img.Image(width: width, height: height);
-
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
-        final int uvIndex = uvPixelStride * (x ~/ 2) + uvRowStride * (y ~/ 2);
-        final int index = y * image.planes[0].bytesPerRow + x;
-
-        final yp = image.planes[0].bytes[index];
-        final up = image.planes[1].bytes[uvIndex];
-        final vp = image.planes[2].bytes[uvIndex];
-
-        int r = (yp + vp * 1436 / 1024 - 179).round();
-        int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91).round();
-        int b = (yp + up * 1814 / 1024 - 227).round();
-
-        r = r.clamp(0, 255);
-        g = g.clamp(0, 255);
-        b = b.clamp(0, 255);
-
-        imgBase.setPixelRgb(x, y, r, g, b);
-      }
-    }
-    return imgBase;
-  }
-
-  Float32List _imageToByteListFloat32(img.Image image, int inputSize) {
-    var convertedBytes = Float32List(1 * inputSize * inputSize * 3);
-    var buffer = Float32List.view(convertedBytes.buffer);
-    int pixelIndex = 0;
-    for (int i = 0; i < inputSize; i++) {
-      for (int j = 0; j < inputSize; j++) {
-        var pixel = image.getPixel(j, i);
-        // Normalisasi warna RGB dari rentang 0-255 menjadi rentang -1.0 hingga 1.0
-        // Ini adalah format input wajib untuk model klasifikasi Teachable Machine
-        buffer[pixelIndex++] = (pixel.r / 127.5) - 1.0;
-        buffer[pixelIndex++] = (pixel.g / 127.5) - 1.0;
-        buffer[pixelIndex++] = (pixel.b / 127.5) - 1.0;
-      }
-    }
-    return convertedBytes;
   }
 
   @override

@@ -33,7 +33,13 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
 
   Future<void> _setupCamera(bool useFront) async {
     if (_cameraController != null) {
+      try {
+        if (_cameraController!.value.isStreamingImages) {
+          await _cameraController!.stopImageStream();
+        }
+      } catch (_) {}
       await _cameraController!.dispose();
+      _cameraController = null;
     }
 
     final cameraIndex = _cameras.indexWhere((c) => c.lensDirection == (useFront ? CameraLensDirection.front : CameraLensDirection.back));
@@ -107,6 +113,11 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
   @override
   void dispose() {
     state = state.copyWith(isDetecting: false);
+    try {
+      if (_cameraController != null && _cameraController!.value.isStreamingImages) {
+        _cameraController!.stopImageStream();
+      }
+    } catch (_) {}
     _cameraController?.dispose();
     _classifierService.dispose();
     super.dispose();
