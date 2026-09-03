@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../providers/sign_recognition_provider.dart';
 import '../../../../features/communication/providers/communication_provider.dart';
@@ -78,16 +79,58 @@ class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen>
               )
             else
               Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(color: AppColors.lightBlue),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.errorMessage ?? 'Membuka Kamera Bentara...',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (state.errorMessage == null) ...[
+                        const CircularProgressIndicator(color: AppColors.lightBlue),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Membuka Kamera Bentara...',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                      ] else ...[
+                        const Icon(Icons.videocam_off_rounded, color: Colors.white70, size: 56),
+                        const SizedBox(height: 16),
+                        Text(
+                          state.errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            if (state.errorMessage?.contains('permanen') == true) {
+                              openAppSettings();
+                            } else {
+                              notifier.initializeCamera();
+                            }
+                          },
+                          icon: Icon(
+                            state.errorMessage?.contains('permanen') == true
+                                ? Icons.settings_rounded
+                                : Icons.refresh_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            state.errorMessage?.contains('permanen') == true
+                                ? 'Buka Pengaturan HP'
+                                : 'Coba Lagi',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
 
@@ -103,6 +146,62 @@ class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen>
                     ),
                   );
                 },
+              ),
+
+            // 2.5 Real-Time Detected Gesture Pill (Live Feedback)
+            if (state.isCameraInitialized && state.currentGesture != null)
+              Positioned(
+                bottom: 230 + bottomInset,
+                left: 24,
+                right: 24,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0C0C0C).withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.lightBlue, width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.lightBlue.withValues(alpha: 0.25),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🖐️', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        Text(
+                          state.currentGesture!.gestureName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.successGreen.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${(state.currentGesture!.confidence * 100).toInt()}%',
+                            style: const TextStyle(
+                              color: Color(0xFF81C784),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
 
             // 3. Top Action Bar (Solid Opaque Buttons)

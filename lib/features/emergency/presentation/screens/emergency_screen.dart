@@ -44,8 +44,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
 
     final currentUser = ref.watch(currentUserProvider);
     final profileState = ref.watch(profileNotifierProvider);
-    final userName = profileState.profile?.name ?? currentUser?.name ?? 'Ghusty';
-    final userEmail = currentUser?.email ?? 'ghustyganteng@gmail.com';
+    final userName = profileState.profile?.name ?? currentUser?.name ?? 'Pengguna';
+    final userEmail = currentUser?.email ?? 'user@bentara.id';
 
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

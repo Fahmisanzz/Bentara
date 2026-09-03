@@ -25,4 +25,15 @@ class ConversationModel {
       endedAt: json['ended_at'] != null ? DateTime.parse(json['ended_at']) : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'title': title,
+      'context': context,
+      'started_at': startedAt.toIso8601String(),
+      'ended_at': endedAt?.toIso8601String(),
+    };
+  }
 }

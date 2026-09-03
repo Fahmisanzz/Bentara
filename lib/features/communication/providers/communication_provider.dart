@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/services/supabase_service.dart';
@@ -8,13 +9,19 @@ import '../services/stt_service.dart';
 import '../services/tts_service.dart';
 import '../services/context_translation_service.dart';
 import '../data/conversation_repository.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../../history/providers/history_provider.dart';
 import 'communication_state.dart';
 
 final sttServiceProvider = Provider<ISTTService>((ref) => SpeechToTextService());
 final ttsServiceProvider = Provider<ITTSService>((ref) => FlutterTtsService());
 final contextTranslationServiceProvider = Provider<IContextTranslationService>((ref) => SupabaseContextTranslationService());
-final conversationRepositoryProvider = Provider<IConversationRepository>((ref) => SupabaseConversationRepository(SupabaseService.client));
+final conversationRepositoryProvider = Provider<IConversationRepository>((ref) {
+  return SupabaseConversationRepository(
+    SupabaseService.client,
+    ref.read(localStorageProvider),
+  );
+});
 
 class CommunicationNotifier extends StateNotifier<CommunicationState> {
   final ISTTService _sttService;
@@ -36,6 +43,15 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
     _startNewConversation();
   }
 
+  void reset() {
+    _startNewConversation();
+  }
+
+  void startNewSessionIfSaved() {
+    if (_isConversationSavedInDb) {
+      _startNewConversation();
+    }
+  }
 
   Future<void> loadConversation(String conversationId) async {
     state = state.copyWith(activeConversationId: conversationId, messages: [], isListening: false);
@@ -58,17 +74,14 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
       
       state = state.copyWith(messages: chatMessages);
     } catch (e) {
-      print('Failed to load conversation: $e');
+      debugPrint('Failed to load conversation: $e');
     }
   }
 
   Future<void> _startNewConversation() async {
-    final user = _ref.read(currentUserProvider);
-    if (user != null) {
-      final convoId = _uuid.v4();
-      state = state.copyWith(activeConversationId: convoId, messages: []);
-      _isConversationSavedInDb = false;
-    }
+    final convoId = _uuid.v4();
+    state = state.copyWith(activeConversationId: convoId, messages: []);
+    _isConversationSavedInDb = false;
   }
 
   void setContextPreset(ContextPreset preset) {
@@ -151,18 +164,34 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
       sourceType: source,
     );
 
+    final convoId = state.activeConversationId ?? _uuid.v4();
+    if (state.activeConversationId == null) {
+      state = state.copyWith(activeConversationId: convoId);
+    }
+
     state = state.copyWith(messages: [...state.messages, newMessage]);
 
-    // Sync to DB
-    if (state.activeConversationId != null) {
-      final user = _ref.read(currentUserProvider);
-      if (user != null && !_isConversationSavedInDb) {
-        await _conversationRepository.saveConversation('Sesi Komunikasi', user.id, contextStr: state.currentPreset.name, id: state.activeConversationId!);
-        _isConversationSavedInDb = true;
-        _ref.read(historyListProvider.notifier).loadHistory();
+    // Simpan ke Cache Lokal Hive & Sinkronkan ke Supabase
+    final user = _ref.read(currentUserProvider);
+    final userId = user?.id ?? 'local_user';
+
+    if (!_isConversationSavedInDb) {
+      String title = rawText.trim();
+      if (title.length > 28) {
+        title = '${title.substring(0, 28)}...';
       }
-      _conversationRepository.saveMessage(state.activeConversationId!, newMessage);
+      if (title.isEmpty) title = 'Percakapan ${state.currentPreset.label}';
+
+      await _conversationRepository.saveConversation(
+        title,
+        userId,
+        contextStr: state.currentPreset.name,
+        id: convoId,
+      );
+      _isConversationSavedInDb = true;
+      _ref.read(historyListProvider.notifier).loadHistory();
     }
+    await _conversationRepository.saveMessage(convoId, newMessage);
   }
 
   void clearChat() {

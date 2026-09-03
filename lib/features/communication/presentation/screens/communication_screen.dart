@@ -22,11 +22,13 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.conversationId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.conversationId != null) {
         ref.read(communicationNotifierProvider.notifier).loadConversation(widget.conversationId!);
-      });
-    }
+      } else {
+        ref.read(communicationNotifierProvider.notifier).startNewSessionIfSaved();
+      }
+    });
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,10 +101,19 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         radius: 38.0,
                         backgroundColor: Colors.white,
-                        child: Icon(Icons.person_rounded, size: 46.0, color: AppColors.primary),
+                        backgroundImage: profile.avatarUrl != null
+                            ? (profile.avatarUrl!.startsWith('http')
+                                ? NetworkImage(profile.avatarUrl!) as ImageProvider
+                                : (profile.avatarUrl!.startsWith('data:')
+                                    ? MemoryImage(base64Decode(profile.avatarUrl!.split(',').last)) as ImageProvider
+                                    : FileImage(File(profile.avatarUrl!))))
+                            : null,
+                        child: profile.avatarUrl == null
+                            ? const Icon(Icons.person_rounded, size: 46.0, color: AppColors.primary)
+                            : null,
                       ),
                     ),
                     const SizedBox(height: 10.0),

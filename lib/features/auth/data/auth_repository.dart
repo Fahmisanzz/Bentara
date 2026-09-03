@@ -52,8 +52,16 @@ class SupabaseAuthRepository implements IAuthRepository {
         throw app_err.AuthException('Registration failed.');
       }
       
-      // Upsert into a public users table if you plan to use RLS, otherwise metadata is enough for now.
-      // Here we simulate returning the newly created user using metadata.
+      try {
+        await _supabase.from('profiles').upsert({
+          'id': response.user!.id,
+          'name': name,
+          'role': role.name,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
+
       return UserModel(
         id: response.user!.id,
         email: email,
@@ -97,33 +105,35 @@ class SupabaseAuthRepository implements IAuthRepository {
 
   Future<UserModel> _fetchUserMetadata(String id, String email) async {
     try {
-      // 1. PHASE 2 ARCHITECTURE: Query the profiles table first
+      // 1. Query the profiles table first
       final response = await _supabase.from('profiles').select().eq('id', id).maybeSingle();
       
       if (response != null) {
         return UserModel(
           id: id,
           email: email,
-          name: response['name'] ?? 'User',
+          name: response['name'] ?? response['full_name'] ?? 'User',
           role: response['role'] == 'tuli' ? UserRole.tuli : UserRole.dengar,
+          avatarUrl: response['avatar_url'] as String?,
           createdAt: response['created_at'] != null 
               ? DateTime.parse(response['created_at']) 
               : DateTime.now(),
         );
       }
     } catch (e) {
-      // If table doesn't exist yet, ignore and fallback to user_metadata gracefully
+      // If table query fails, ignore and fallback to user_metadata gracefully
     }
 
-    // 2. FALLBACK: Parse from user_metadata (useful while SQL Trigger is being setup)
+    // 2. FALLBACK: Parse from user_metadata
     final user = _supabase.auth.currentUser;
     if (user != null && user.userMetadata != null) {
       final meta = user.userMetadata!;
       return UserModel(
         id: id,
         email: email,
-        name: meta['name'] ?? 'User',
+        name: meta['name'] ?? meta['full_name'] ?? 'User',
         role: meta['role'] == 'tuli' ? UserRole.tuli : UserRole.dengar,
+        avatarUrl: meta['avatar_url'] as String?,
         createdAt: DateTime.tryParse(user.createdAt) ?? DateTime.now(),
       );
     }

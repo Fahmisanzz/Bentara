@@ -1,4 +1,5 @@
-
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,8 +17,9 @@ class HomeScreen extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final profileState = ref.watch(profileNotifierProvider);
 
-    final userName = profileState.profile?.name ?? currentUser?.name ?? 'Ghusty';
-    final userEmail = currentUser?.email ?? 'ghustyganteng@gmail.com';
+    final userName = profileState.profile?.name ?? currentUser?.name ?? 'Pengguna';
+    final userEmail = currentUser?.email ?? 'user@bentara.id';
+    final userAvatar = profileState.profile?.avatarUrl ?? currentUser?.avatarUrl;
 
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -60,14 +62,20 @@ class HomeScreen extends ConsumerWidget {
                                     color: Colors.white,
                                     width: 2.0,
                                   ),
-                                  color: Colors.white, // Solid white background, no transparency
+                                  color: Colors.white,
                                 ),
-                                child: const ClipOval(
-                                  child: Icon(
-                                    Icons.person_rounded,
-                                    color: AppColors.primary,
-                                    size: 26.0,
-                                  ),
+                                child: ClipOval(
+                                  child: userAvatar != null
+                                      ? (userAvatar.startsWith('http')
+                                          ? Image.network(userAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
+                                          : (userAvatar.startsWith('data:')
+                                              ? Image.memory(base64Decode(userAvatar.split(',').last), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
+                                              : Image.file(File(userAvatar), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))))
+                                      : const Icon(
+                                          Icons.person_rounded,
+                                          color: AppColors.primary,
+                                          size: 26.0,
+                                        ),
                                 ),
                               ),
                               const SizedBox(width: 12.0),

@@ -25,7 +25,7 @@ class SignRecognitionState {
       isDetecting: false,
       currentGesture: null,
       composedSentence: '',
-      confidenceThreshold: 0.80,
+      confidenceThreshold: 0.58,
       errorMessage: null,
       isFrontCamera: true,
     );
@@ -43,7 +43,7 @@ class SignRecognitionState {
     return SignRecognitionState(
       isCameraInitialized: isCameraInitialized ?? this.isCameraInitialized,
       isDetecting: isDetecting ?? this.isDetecting,
-      currentGesture: currentGesture, // allow null
+      currentGesture: currentGesture ?? this.currentGesture,
       composedSentence: composedSentence ?? this.composedSentence,
       confidenceThreshold: confidenceThreshold ?? this.confidenceThreshold,
       errorMessage: errorMessage ?? this.errorMessage,

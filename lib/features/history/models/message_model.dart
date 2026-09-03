@@ -31,4 +31,17 @@ class MessageModel {
       createdAt: DateTime.parse(json['created_at']),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'conversation_id': conversationId,
+      'sender_type': senderType,
+      'input_type': inputType,
+      'original_text': originalText,
+      'processed_text': processedText,
+      'output_text': outputText,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }

@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../models/chat_message_model.dart';
 
 abstract class IConversationRepository {
@@ -10,25 +12,58 @@ abstract class IConversationRepository {
 
 class SupabaseConversationRepository implements IConversationRepository {
   final SupabaseClient _supabase;
+  final ILocalStorageService _localStorage;
 
-  SupabaseConversationRepository(this._supabase);
+  SupabaseConversationRepository(this._supabase, this._localStorage);
 
   @override
   Future<String> saveConversation(String title, String userId, {String? contextStr, String? id}) async {
+    final convoId = id ?? const Uuid().v4();
+    final nowStr = DateTime.now().toIso8601String();
+
+    // 1. Simpan ke Cache Lokal Hive (Per User)
     try {
-      final response = await _supabase.from('conversations').insert({
-        'id': id ?? const Uuid().v4(),
+      final key = 'conversations_$userId';
+      final cachedStr = _localStorage.getString(key);
+      List<dynamic> list = [];
+      if (cachedStr != null) {
+        try {
+          list = jsonDecode(cachedStr) as List<dynamic>;
+        } catch (_) {}
+      }
+
+      // Hapus jika sudah ada id yang sama untuk di-update
+      list.removeWhere((item) => item['id'] == convoId);
+
+      list.insert(0, {
+        'id': convoId,
         'title': title,
         'user_id': userId,
         'context': contextStr ?? 'general',
-        'started_at': DateTime.now().toIso8601String(),
-      }).select('id').single();
-      
-      return response['id'] as String;
-    } catch (e) {
-      print('Failed to save conversation: $e');
-      return 'local-convo-${DateTime.now().millisecondsSinceEpoch}';
+        'started_at': nowStr,
+      });
+
+      await _localStorage.saveString(key, jsonEncode(list));
+    } catch (_) {}
+
+    // 2. Sinkronkan ke Supabase jika online
+    try {
+      final response = await _supabase.from('conversations').upsert({
+        'id': convoId,
+        'title': title,
+        'user_id': userId,
+        'context': contextStr ?? 'general',
+        'started_at': nowStr,
+      }).select('id').maybeSingle();
+
+      if (response != null && response['id'] != null) {
+        return response['id'] as String;
+      }
+    } catch (_) {
+      // Supabase offline / RLS fallback
     }
+
+    return convoId;
   }
 
   String _mapSourceType(SourceType type) {
@@ -45,29 +80,74 @@ class SupabaseConversationRepository implements IConversationRepository {
 
   @override
   Future<void> saveMessage(String conversationId, ChatMessageModel message) async {
-    try {
-      if (conversationId.startsWith('local-convo-')) return; 
+    final senderTypeStr = message.sender.name == 'userTuli' ? 'tuli' : 'dengar';
+    final inputTypeStr = _mapSourceType(message.sourceType);
+    final nowStr = message.timestamp.toIso8601String();
 
-      final String senderTypeStr = message.sender.name == 'userTuli' ? 'tuli' : 'dengar';
-      
-      await _supabase.from('messages').insert({
+    // 1. Simpan ke Cache Lokal Hive (Per Conversation)
+    try {
+      final key = 'messages_$conversationId';
+      final cachedStr = _localStorage.getString(key);
+      List<dynamic> list = [];
+      if (cachedStr != null) {
+        try {
+          list = jsonDecode(cachedStr) as List<dynamic>;
+        } catch (_) {}
+      }
+
+      list.add({
+        'id': message.id,
         'conversation_id': conversationId,
         'sender_type': senderTypeStr,
-        'input_type': _mapSourceType(message.sourceType),
+        'input_type': inputTypeStr,
         'original_text': message.originalText,
         'processed_text': message.contextualText,
         'output_text': message.text,
-        'created_at': message.timestamp.toIso8601String(),
+        'created_at': nowStr,
       });
-    } catch (e) {
-      print('Database Sync Failed for Message: $e');
+
+      await _localStorage.saveString(key, jsonEncode(list));
+    } catch (_) {}
+
+    // 2. Sinkronkan ke Supabase jika online
+    try {
+      await _supabase.from('messages').insert({
+        'id': message.id,
+        'conversation_id': conversationId,
+        'sender_type': senderTypeStr,
+        'input_type': inputTypeStr,
+        'original_text': message.originalText,
+        'processed_text': message.contextualText,
+        'output_text': message.text,
+        'created_at': nowStr,
+      });
+    } catch (_) {
+      // Supabase offline / RLS fallback
     }
   }
 
   @override
   Future<List<ChatMessageModel>> getConversationMessages(String conversationId) async {
-    // Currently, history reading uses HistoryRepository. 
-    // This is just a mock return if called from communication provider directly.
+    try {
+      final key = 'messages_$conversationId';
+      final cachedStr = _localStorage.getString(key);
+      if (cachedStr != null) {
+        final list = jsonDecode(cachedStr) as List<dynamic>;
+        return list.map((m) {
+          return ChatMessageModel(
+            id: m['id'] ?? const Uuid().v4(),
+            text: m['output_text'] ?? '',
+            sender: m['sender_type'] == 'tuli' ? SenderType.userTuli : SenderType.userDengar,
+            timestamp: m['created_at'] != null ? DateTime.parse(m['created_at']) : DateTime.now(),
+            sourceType: m['input_type'] == 'voice' 
+                ? SourceType.stt 
+                : (m['input_type'] == 'sign' ? SourceType.sign : SourceType.textInput),
+            contextualText: m['processed_text'],
+            originalText: m['original_text'],
+          );
+        }).toList();
+      }
+    } catch (_) {}
     return [];
   }
 }

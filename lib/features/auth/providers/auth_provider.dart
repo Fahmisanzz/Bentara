@@ -3,6 +3,9 @@ import '../../../core/services/supabase_service.dart';
 import '../data/auth_repository.dart';
 import '../models/user_model.dart';
 import 'auth_state.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../history/providers/history_provider.dart';
+import '../../communication/providers/communication_provider.dart';
 
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   return SupabaseAuthRepository(SupabaseService.client);
@@ -25,6 +28,8 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
       if (user != null) {
         _ref.read(currentUserProvider.notifier).state = user;
         state = Authenticated(user);
+        _ref.read(profileNotifierProvider.notifier).loadProfile();
+        _ref.read(historyListProvider.notifier).loadHistory();
       } else {
         state = const Unauthenticated();
       }
@@ -39,6 +44,8 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
       final user = await _authRepository.signInWithEmail(email, password);
       _ref.read(currentUserProvider.notifier).state = user;
       state = Authenticated(user);
+      _ref.read(profileNotifierProvider.notifier).loadProfile();
+      _ref.read(historyListProvider.notifier).loadHistory();
     } catch (e) {
       state = AuthError(e.toString());
     }
@@ -50,6 +57,8 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
       final user = await _authRepository.signUpWithEmail(name, email, password, role);
       _ref.read(currentUserProvider.notifier).state = user;
       state = Authenticated(user);
+      _ref.read(profileNotifierProvider.notifier).loadProfile();
+      _ref.read(historyListProvider.notifier).loadHistory();
     } catch (e) {
       state = AuthError(e.toString());
     }
@@ -70,6 +79,9 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     try {
       await _authRepository.signOut();
       _ref.read(currentUserProvider.notifier).state = null;
+      _ref.read(profileNotifierProvider.notifier).reset();
+      _ref.read(historyListProvider.notifier).reset();
+      _ref.read(communicationNotifierProvider.notifier).reset();
       state = const Unauthenticated();
     } catch (e) {
       state = AuthError(e.toString());

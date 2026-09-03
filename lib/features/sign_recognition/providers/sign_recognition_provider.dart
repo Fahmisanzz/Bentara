@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../communication/providers/communication_provider.dart';
 import '../services/sign_classifier_service.dart';
 import 'sign_recognition_state.dart';
@@ -20,6 +21,23 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
 
   Future<void> initializeCamera() async {
     try {
+      state = state.copyWith(errorMessage: null);
+
+      // 1. Minta izin akses kamera secara eksplisit
+      final status = await Permission.camera.request();
+      if (status.isPermanentlyDenied) {
+        state = state.copyWith(
+          errorMessage: 'Izin kamera ditolak permanen. Buka Pengaturan HP untuk mengaktifkan kamera.',
+        );
+        return;
+      } else if (!status.isGranted) {
+        state = state.copyWith(
+          errorMessage: 'Izin kamera dibutuhkan untuk memindai bahasa isyarat.',
+        );
+        return;
+      }
+
+      // 2. Ambil daftar kamera perangkat
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
         state = state.copyWith(errorMessage: 'Kamera tidak ditemukan pada perangkat ini.');
@@ -60,19 +78,27 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
     _cameraController!.startImageStream((image) {
       if (!state.isDetecting) return;
       
-      _classifierService.processCameraImage(image, targetCamera.sensorOrientation, (result) {
-        if (result != null && result.confidence >= state.confidenceThreshold) {
-          _onGestureDetected(result);
-        }
-      });
+      _classifierService.processCameraImage(
+        image, 
+        targetCamera.sensorOrientation, 
+        useFront,
+        (result) {
+          if (result != null && result.confidence >= state.confidenceThreshold) {
+            _onGestureDetected(result);
+          }
+        },
+      );
     });
   }
 
   void _onGestureDetected(SignGestureResult result) {
-    // Avoid repeating the same gesture too quickly
-    if (state.currentGesture != null && 
+    // Selalu update currentGesture agar badge visual deteksi real-time di UI merespons
+    final isSameRecent = state.currentGesture != null && 
         state.currentGesture!.gestureName == result.gestureName &&
-        DateTime.now().difference(state.currentGesture!.timestamp).inSeconds < 2) {
+        DateTime.now().difference(state.currentGesture!.timestamp).inMilliseconds < 2000;
+
+    if (isSameRecent) {
+      state = state.copyWith(currentGesture: result);
       return;
     }
 

@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -17,7 +20,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   String _selectedRole = 'tuli';
+  String? _pickedImagePath;
   bool _initialized = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -38,8 +43,92 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       
       _nameController.text = profile?.name ?? currentUser?.name ?? '';
       _selectedRole = profile?.role.toLowerCase() ?? (currentUser?.role.name ?? 'tuli');
+      _pickedImagePath = profile?.avatarUrl ?? currentUser?.avatarUrl;
       _initialized = true;
     }
+  }
+
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (BuildContext ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Ubah Foto Profil',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16.0),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                  ),
+                  title: const Text('Pilih dari Galeri', style: TextStyle(fontWeight: FontWeight.w600)),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final XFile? image = await _picker.pickImage(
+                      source: ImageSource.gallery,
+                      maxWidth: 600,
+                      maxHeight: 600,
+                      imageQuality: 85,
+                    );
+                    if (image != null) {
+                      setState(() {
+                        _pickedImagePath = image.path;
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, color: AppColors.successGreen),
+                  ),
+                  title: const Text('Ambil Foto Kamera', style: TextStyle(fontWeight: FontWeight.w600)),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final XFile? photo = await _picker.pickImage(
+                      source: ImageSource.camera,
+                      maxWidth: 600,
+                      maxHeight: 600,
+                      imageQuality: 85,
+                    );
+                    if (photo != null) {
+                      setState(() {
+                        _pickedImagePath = photo.path;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _handleSave() async {
@@ -49,6 +138,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final success = await notifier.updateProfile(
       name: _nameController.text.trim(),
       role: _selectedRole,
+      avatarUrl: _pickedImagePath,
     );
 
     if (mounted) {
@@ -113,50 +203,62 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Avatar Preview with camera badge
+                // Avatar Preview with camera badge (Interactive Pick)
                 Center(
-                  child: Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(3.0),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppGradients.lightBlue,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 8.0,
-                              offset: const Offset(0, 3.0),
-                            ),
-                          ],
-                        ),
-                        child: const CircleAvatar(
-                          radius: 40.0,
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.person_rounded, size: 44.0, color: AppColors.primary),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(6.0),
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3.0),
                           decoration: BoxDecoration(
-                            gradient: AppGradients.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2.5),
+                            gradient: AppGradients.lightBlue,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 4.0,
-                                offset: const Offset(0, 2.0),
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 8.0,
+                                offset: const Offset(0, 3.0),
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.camera_alt_rounded, size: 16.0, color: Colors.white),
+                          child: CircleAvatar(
+                            radius: 46.0,
+                            backgroundColor: Colors.white,
+                            backgroundImage: _pickedImagePath != null
+                                ? (_pickedImagePath!.startsWith('http')
+                                    ? NetworkImage(_pickedImagePath!) as ImageProvider
+                                    : (_pickedImagePath!.startsWith('data:')
+                                        ? MemoryImage(base64Decode(_pickedImagePath!.split(',').last)) as ImageProvider
+                                        : FileImage(File(_pickedImagePath!))))
+                                : null,
+                            child: _pickedImagePath == null
+                                ? const Icon(Icons.person_rounded, size: 48.0, color: AppColors.primary)
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(7.0),
+                            decoration: BoxDecoration(
+                              gradient: AppGradients.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 4.0,
+                                  offset: const Offset(0, 2.0),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, size: 16.0, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16.0),

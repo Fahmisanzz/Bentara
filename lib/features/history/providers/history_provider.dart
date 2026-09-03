@@ -1,15 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../models/conversation_model.dart';
 import '../data/history_repository.dart';
 
-final historyRepoProvider = Provider((ref) => HistoryRepository(Supabase.instance.client));
+final historyRepoProvider = Provider((ref) => HistoryRepository(
+  Supabase.instance.client,
+  ref.read(localStorageProvider),
+));
 
 class HistoryListNotifier extends StateNotifier<AsyncValue<List<ConversationModel>>> {
   final HistoryRepository _repo;
 
   HistoryListNotifier(this._repo) : super(const AsyncValue.loading()) {
     loadHistory();
+  }
+
+  void reset() {
+    state = const AsyncValue.data([]);
   }
 
   Future<void> loadHistory() async {
