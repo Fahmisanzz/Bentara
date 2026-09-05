@@ -11,3 +11,17 @@ class SignGestureResult {
     required this.mappedText,
   });
 }
+
+class SignDebugInfo {
+  final String rawLabel;
+  final double maxConfidence;
+  final int inferenceTimeMs;
+  final double fps;
+
+  SignDebugInfo({
+    required this.rawLabel,
+    required this.maxConfidence,
+    required this.inferenceTimeMs,
+    required this.fps,
+  });
+}

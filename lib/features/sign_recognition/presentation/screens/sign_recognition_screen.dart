@@ -296,6 +296,34 @@ class _SignRecognitionScreenState extends ConsumerState<SignRecognitionScreen>
               ),
             ),
 
+            // 3.5 Debug Info Overlay (Development Only)
+            if (state.debugInfo != null)
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 64,
+                left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('AI DEBUG INFO', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text('Model: TFLite (Teachable Machine)', style: const TextStyle(color: Colors.white70, fontSize: 9)),
+                      Text('Prediksi TFLite: ${state.debugInfo!.rawLabel}', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                      Text('Confidence: ${(state.debugInfo!.maxConfidence * 100).toStringAsFixed(1)}%', style: TextStyle(color: state.debugInfo!.maxConfidence >= state.confidenceThreshold ? AppColors.successGreen : Colors.amber, fontSize: 10)),
+                      Text('Inference Time: ${state.debugInfo!.inferenceTimeMs}ms', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                      Text('FPS: ${state.debugInfo!.fps.toStringAsFixed(1)}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ),
+
             // 4. Solid White Bottom Result Panel
             Positioned(
               bottom: 0,

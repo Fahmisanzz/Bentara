@@ -8,6 +8,7 @@ class SignRecognitionState {
   final double confidenceThreshold;
   final String? errorMessage;
   final bool isFrontCamera;
+  final SignDebugInfo? debugInfo;
 
   SignRecognitionState({
     required this.isCameraInitialized,
@@ -17,6 +18,7 @@ class SignRecognitionState {
     required this.confidenceThreshold,
     this.errorMessage,
     this.isFrontCamera = true,
+    this.debugInfo,
   });
 
   factory SignRecognitionState.initial() {
@@ -28,6 +30,7 @@ class SignRecognitionState {
       confidenceThreshold: 0.58,
       errorMessage: null,
       isFrontCamera: true,
+      debugInfo: null,
     );
   }
 
@@ -39,6 +42,7 @@ class SignRecognitionState {
     double? confidenceThreshold,
     String? errorMessage,
     bool? isFrontCamera,
+    SignDebugInfo? debugInfo,
   }) {
     return SignRecognitionState(
       isCameraInitialized: isCameraInitialized ?? this.isCameraInitialized,
@@ -48,6 +52,7 @@ class SignRecognitionState {
       confidenceThreshold: confidenceThreshold ?? this.confidenceThreshold,
       errorMessage: errorMessage ?? this.errorMessage,
       isFrontCamera: isFrontCamera ?? this.isFrontCamera,
+      debugInfo: debugInfo ?? this.debugInfo,
     );
   }
 }

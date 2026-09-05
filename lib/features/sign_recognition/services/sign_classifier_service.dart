@@ -12,7 +12,7 @@ abstract class ISignClassifierService {
     CameraImage image, 
     int sensorOrientation, 
     bool isFrontCamera, 
-    Function(SignGestureResult?) onResult,
+    Function(SignGestureResult?, SignDebugInfo?) onResult,
   );
   Future<void> dispose();
 }
@@ -182,7 +182,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
     CameraImage image, 
     int sensorOrientation, 
     bool isFrontCamera, 
-    Function(SignGestureResult?) onResult,
+    Function(SignGestureResult?, SignDebugInfo?) onResult,
   ) async {
     if (_isProcessing || _interpreter == null || _labels == null) return;
 
@@ -199,7 +199,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
     if (!isMotionActive) {
       _previousLabel = null;
       _consecutiveCount = 0;
-      onResult(null);
+      onResult(null, null);
       return;
     }
     
@@ -209,6 +209,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
     }
 
     _isProcessing = true;
+    final startProcessTime = DateTime.now();
 
     try {
       String format;
@@ -248,6 +249,7 @@ class TFLiteSignClassifierService implements ISignClassifierService {
 
       // Jalankan Inferensi TFLite
       _interpreter!.run(inputBuffer, outputBuffer);
+      final inferenceTime = DateTime.now().difference(startProcessTime).inMilliseconds;
 
       // Ambil probabilitas tertinggi
       List<double> probabilities = (outputBuffer[0] as List).cast<double>();
@@ -277,8 +279,15 @@ class TFLiteSignClassifierService implements ISignClassifierService {
         final mappedText = SignVocabulary.lookup(rawLabel);
         final displayName = SignVocabulary.getDisplayName(rawLabel);
 
+        final debugInfo = SignDebugInfo(
+          rawLabel: rawLabel,
+          maxConfidence: maxProb,
+          inferenceTimeMs: inferenceTime,
+          fps: 1000 / (DateTime.now().difference(_lastDetectionTime).inMilliseconds > 0 ? DateTime.now().difference(_lastDetectionTime).inMilliseconds : 1),
+        );
+
         // Cetak log ke konsol agar developer bisa memantau semua gestur secara transparan
-        debugPrint('TFLite: $rawLabel (${(maxProb * 100).toStringAsFixed(1)}%) | idle: ${(idleProb * 100).toStringAsFixed(1)}%');
+        debugPrint('TFLite: $rawLabel (${(maxProb * 100).toStringAsFixed(1)}%) | idle: ${(idleProb * 100).toStringAsFixed(1)}% | time: ${inferenceTime}ms');
 
         if (mappedText != null && maxProb >= threshold && beatsIdleWithMargin) {
           // Validasi kestabilan frame (stabil 2 frame berturut-turut atau keyakinan kuat >= 72%)
@@ -296,20 +305,22 @@ class TFLiteSignClassifierService implements ISignClassifierService {
               timestamp: DateTime.now(),
               mappedText: mappedText,
             );
-            onResult(result);
+            onResult(result, debugInfo);
             _lastDetectionTime = DateTime.now();
             _consecutiveCount = 0; // reset counter setelah terkonfirmasi
+          } else {
+            onResult(null, debugInfo);
           }
         } else {
           // Jika kelas terdeteksi adalah 'idle' atau probabilitas di bawah threshold/margin
           _previousLabel = null;
           _consecutiveCount = 0;
-          onResult(null);
+          onResult(null, debugInfo);
         }
       } else {
         _previousLabel = null;
         _consecutiveCount = 0;
-        onResult(null);
+        onResult(null, null);
       }
       
     } catch (e, stack) {

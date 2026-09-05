@@ -82,7 +82,10 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
         image, 
         targetCamera.sensorOrientation, 
         useFront,
-        (result) {
+        (result, debugInfo) {
+          if (debugInfo != null && mounted) {
+             state = state.copyWith(debugInfo: debugInfo);
+          }
           if (result != null && result.confidence >= state.confidenceThreshold) {
             _onGestureDetected(result);
           }
