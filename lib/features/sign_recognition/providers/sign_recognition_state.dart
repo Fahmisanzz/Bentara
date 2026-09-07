@@ -27,7 +27,7 @@ class SignRecognitionState {
       isDetecting: false,
       currentGesture: null,
       composedSentence: '',
-      confidenceThreshold: 0.58,
+      confidenceThreshold: 0.75,
       errorMessage: null,
       isFrontCamera: true,
       debugInfo: null,

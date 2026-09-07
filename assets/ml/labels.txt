@@ -1,8 +1,0 @@
-0 idle
-1 0_halo_apa_kabar
-2 1_nama
-3 2_tolong
-4 3_pusing
-5 4_terimakasih
-6 5_nama_kamu_siapa
-7 6_salam_kenal

@@ -1,21 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../communication/providers/communication_provider.dart';
-import '../services/sign_classifier_service.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../services/hand_landmark_service.dart';
+import '../services/gesture_classifier.dart';
 import 'sign_recognition_state.dart';
 import '../models/sign_gesture_result.dart';
 
-final signClassifierServiceProvider = Provider<ISignClassifierService>((ref) => TFLiteSignClassifierService());
+final handLandmarkServiceProvider = Provider<HandLandmarkService>((ref) => HandLandmarkService());
+final gestureClassifierProvider = Provider<GestureClassifier>((ref) => GestureClassifier());
 
 class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
-  final ISignClassifierService _classifierService;
+  final HandLandmarkService _handLandmarkService;
+  final GestureClassifier _gestureClassifier;
   final Ref _ref;
   
   CameraController? _cameraController;
   List<CameraDescription> _cameras = [];
+  bool _isProcessingFrame = false;
 
-  SignRecognitionNotifier(this._classifierService, this._ref) : super(SignRecognitionState.initial());
+  SignRecognitionNotifier(this._handLandmarkService, this._gestureClassifier, this._ref) : super(SignRecognitionState.initial());
 
   CameraController? get cameraController => _cameraController;
 
@@ -67,30 +73,43 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
       targetCamera,
       ResolutionPreset.medium,
       enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.nv21, // CRITICAL FOR MEDIAPIPE!
     );
 
     await _cameraController!.initialize();
-    await _classifierService.initialize();
+    await _handLandmarkService.initialize();
+    await _gestureClassifier.initialize();
 
     state = state.copyWith(isCameraInitialized: true, isDetecting: true, errorMessage: null, isFrontCamera: useFront);
 
     // Start video stream
-    _cameraController!.startImageStream((image) {
-      if (!state.isDetecting) return;
+    _cameraController!.startImageStream((image) async {
+      if (!state.isDetecting || _isProcessingFrame) return;
+      _isProcessingFrame = true;
       
-      _classifierService.processCameraImage(
-        image, 
-        targetCamera.sensorOrientation, 
-        useFront,
-        (result, debugInfo) {
+      try {
+        final landmarks = await _handLandmarkService.processCameraImage(
+          image, 
+          targetCamera.sensorOrientation,
+          isFrontCamera: state.isFrontCamera,
+        );
+
+        // Always add frame (even if null) to maintain temporal sequence integrity
+        _gestureClassifier.addFrame(landmarks);
+        
+        await _gestureClassifier.predict((result, debugInfo) {
           if (debugInfo != null && mounted) {
              state = state.copyWith(debugInfo: debugInfo);
           }
           if (result != null && result.confidence >= state.confidenceThreshold) {
             _onGestureDetected(result);
           }
-        },
-      );
+        });
+      } catch (e) {
+        debugPrint('Error processing frame: $e');
+      } finally {
+        _isProcessingFrame = false;
+      }
     });
   }
 
@@ -105,12 +124,25 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
       return;
     }
 
+    // Personalisasi perkenalan nama jika profil pengguna tersedia
+    String gestureText = result.mappedText;
+    try {
+      final profile = _ref.read(profileNotifierProvider).profile;
+      if (profile != null && profile.name.trim().isNotEmpty && profile.name.trim().toLowerCase() != 'user') {
+        if (gestureText.contains('Perkenalkan, nama saya Haikal')) {
+          gestureText = 'Perkenalkan, nama saya ${profile.name.trim()}';
+        }
+      }
+    } catch (_) {}
+
+    final personalizedResult = result.copyWith(mappedText: gestureText);
+
     final newSentence = state.composedSentence.isEmpty 
-        ? result.mappedText 
-        : '${state.composedSentence} ${result.mappedText}';
+        ? gestureText 
+        : '${state.composedSentence} $gestureText';
 
     state = state.copyWith(
-      currentGesture: result,
+      currentGesture: personalizedResult,
       composedSentence: newSentence,
     );
   }
@@ -148,11 +180,16 @@ class SignRecognitionNotifier extends StateNotifier<SignRecognitionState> {
       }
     } catch (_) {}
     _cameraController?.dispose();
-    _classifierService.dispose();
+    _handLandmarkService.dispose();
+    _gestureClassifier.dispose();
     super.dispose();
   }
 }
 
 final signRecognitionNotifierProvider = StateNotifierProvider.autoDispose<SignRecognitionNotifier, SignRecognitionState>((ref) {
-  return SignRecognitionNotifier(ref.read(signClassifierServiceProvider), ref);
+  return SignRecognitionNotifier(
+    ref.read(handLandmarkServiceProvider),
+    ref.read(gestureClassifierProvider),
+    ref,
+  );
 });

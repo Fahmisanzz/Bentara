@@ -56,7 +56,18 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- SENDER & CONTEXT BADGE ---
+                  // --- SENDER NAME ---
+                  Text(
+                    isCurrentUser ? 'Teman Tuli' : 'Teman Dengar',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isCurrentUser ? Colors.white70 : AppColors.primary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // --- CONTEXT BADGE ---
                   if (hasContext)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6.0),
@@ -90,37 +101,56 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
                       ),
                     ),
 
-                  // --- MAIN TEXT ---
-                  Text(
-                    _showOriginal ? widget.message.originalText! : widget.message.text,
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      color: isCurrentUser ? Colors.white : Colors.black87,
-                      height: 1.3,
-                      fontStyle: _showOriginal ? FontStyle.italic : FontStyle.normal,
-                    ),
-                  ),
-
-                  // --- TOGGLE ORIGINAL TEXT ---
-                  if (hasContext) ...[
-                    const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _showOriginal = !_showOriginal;
-                        });
-                      },
-                      child: Text(
-                        _showOriginal ? 'Sembunyikan Teks Asli' : 'Lihat Teks Asli',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isCurrentUser ? Colors.white70 : AppColors.primary,
-                          decoration: TextDecoration.underline,
+                  // --- MAIN TEXT & TIMESTAMP ---
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: Text(
+                          _showOriginal ? widget.message.originalText! : widget.message.text,
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            color: isCurrentUser ? Colors.white : Colors.black87,
+                            height: 1.3,
+                            fontStyle: _showOriginal ? FontStyle.italic : FontStyle.normal,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (hasContext) ...[
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _showOriginal = !_showOriginal;
+                                });
+                              },
+                              child: Text(
+                                _showOriginal ? 'Sembunyikan' : 'Teks Asli',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCurrentUser ? Colors.white70 : AppColors.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Text(
+                            "${widget.message.timestamp.hour.toString().padLeft(2, '0')}:${widget.message.timestamp.minute.toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isCurrentUser ? Colors.white70 : Colors.black45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

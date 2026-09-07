@@ -1,104 +1,113 @@
 class SignVocabulary {
-  // Kamus pemetaan label model Teachable Machine ke teks kalimat chat & suara TTS.
+  // Kamus pemetaan label model BISINDO (15 kata aktif) ke teks kalimat & suara TTS.
   static const Map<String, String> dictionary = {
-    // Model Baru (Sesuai labels.txt terbaru):
-    '0_halo_apa_kabar': 'Halo, apa kabar?',
-    '1_nama': 'Perkenalkan, nama saya Haikal',
-    '2_tolong': 'Tolong',
-    '3_pusing': 'Pusing',
-    '4_terimakasih': 'Terima kasih',
-    '5_nama_kamu_siapa': 'Nama kamu siapa?',
-    '6_salam_kenal': 'Salam kenal',
-
-    // Pemetaan nama gesture bersih:
-    'halo_apa_kabar': 'Halo, apa kabar?',
-    'halo': 'Halo, apa kabar?',
-    'Halo': 'Halo, apa kabar?',
-    'nama': 'Perkenalkan, nama saya Haikal',
-    'Nama': 'Perkenalkan, nama saya Haikal',
-    'tolong': 'Tolong',
-    'Tolong': 'Tolong',
-    'pusing': 'Pusing',
-    'Pusing': 'Pusing',
-    'sakit': 'Pusing',
-    'Sakit': 'Pusing',
+    // 5 Kata Awal:
+    'halo': 'Halo',
+    'Halo': 'Halo',
+    'nama': 'Nama',
+    'Nama': 'Nama',
+    'kamu': 'Kamu',
+    'Kamu': 'Kamu',
+    'siapa': 'Siapa',
+    'Siapa': 'Siapa',
     'terimakasih': 'Terima kasih',
     'Terimakasih': 'Terima kasih',
     'terima kasih': 'Terima kasih',
     'Terima kasih': 'Terima kasih',
-    'nama_kamu_siapa': 'Nama kamu siapa?',
-    'nama kamu siapa': 'Nama kamu siapa?',
-    'bertanya_nama': 'Nama kamu siapa?',
-    'bertanya nama': 'Nama kamu siapa?',
-    'salam kenal': 'Salam kenal',
-    'Salam kenal': 'Salam kenal',
-    'Salam Kenal': 'Salam kenal',
+    'terimaKasih': 'Terima kasih',
 
-    // Variasi indeks alternatif:
-    '0_halo': 'Halo, apa kabar?',
-    '0_Halo': 'Halo, apa kabar?',
-    '1_Nama': 'Perkenalkan, nama saya Haikal',
-    '2_Tolong': 'Tolong',
-    '3_Pusing': 'Pusing',
-    '4_Terimakasih': 'Terima kasih',
-    '5_bertanya_nama': 'Nama kamu siapa?',
-    '5_bertanya nama': 'Nama kamu siapa?',
-    '6_Salam kenal': 'Salam kenal',
-
-    // Cadangan kosakata sebelumnya:
-    'asal': 'Saya berasal dari...',
-    'tanya_asal': 'Kamu dari mana?',
-    'tanya asal': 'Kamu dari mana?',
+    // 10 Kata Baru:
+    'makan': 'Makan',
+    'Makan': 'Makan',
+    'tidur': 'Tidur',
+    'Tidur': 'Tidur',
+    'buku': 'Buku',
+    'Buku': 'Buku',
+    'telepon': 'Telepon',
+    'Telepon': 'Telepon',
+    'menulis': 'Menulis',
+    'Menulis': 'Menulis',
+    'jam': 'Jam',
+    'Jam': 'Jam',
+    'pusing': 'Pusing',
+    'Pusing': 'Pusing',
+    'pintar': 'Pintar',
+    'Pintar': 'Pintar',
+    'jalan': 'Jalan',
+    'Jalan': 'Jalan',
+    'saya': 'Saya',
+    'Saya': 'Saya',
   };
 
-  /// Mencari pemetaan teks dari label mentah model (misal "0 0_halo", "0_halo", atau "Halo").
-  static String? lookup(String rawLabel) {
+  /// Mencari pemetaan teks dari label mentah model (misal "1 0_halo_apa_kabar", "2 1_perkenalkan_nama", atau "Halo").
+  static String? lookup(String rawLabel, {String? userName}) {
     // 0. Abaikan secara mutlak jika label adalah 'idle' atau pose diam
     final lowerRaw = rawLabel.toLowerCase().trim();
     if (lowerRaw.contains('idle') || lowerRaw.contains('background')) {
       return null;
     }
 
+    String? found;
+
     // 1. Cek langsung
     if (dictionary.containsKey(rawLabel)) {
-      return dictionary[rawLabel];
+      found = dictionary[rawLabel];
+    } else {
+      final trimmed = rawLabel.trim();
+      if (dictionary.containsKey(trimmed)) {
+        found = dictionary[trimmed];
+      } else {
+        // Cek jika format label Teachable Machine memiliki spasi (contoh: "2 1_perkenalkan_nama" -> "1_perkenalkan_nama")
+        if (trimmed.contains(' ')) {
+          final strippedFirstWord = trimmed.split(' ').sublist(1).join(' ').trim();
+          if (dictionary.containsKey(strippedFirstWord)) {
+            found = dictionary[strippedFirstWord];
+          }
+        }
+
+        if (found == null) {
+          // Bersihkan semua awalan angka & underscore/spasi (contoh: "1_perkenalkan_nama" -> "perkenalkan_nama")
+          var cleaned = trimmed;
+          if (cleaned.contains(' ')) {
+            cleaned = cleaned.split(' ').sublist(1).join(' ').trim();
+          }
+          cleaned = cleaned.replaceAll(RegExp(r'^[0-9]+[_\s]*'), '').trim();
+
+          if (dictionary.containsKey(cleaned)) {
+            found = dictionary[cleaned];
+          } else {
+            final lower = cleaned.toLowerCase();
+            if (dictionary.containsKey(lower)) {
+              found = dictionary[lower];
+            } else {
+              final underscored = lower.replaceAll(' ', '_');
+              if (dictionary.containsKey(underscored)) {
+                found = dictionary[underscored];
+              } else {
+                final spaced = lower.replaceAll('_', ' ');
+                if (dictionary.containsKey(spaced)) {
+                  found = dictionary[spaced];
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
-    final trimmed = rawLabel.trim();
-    if (dictionary.containsKey(trimmed)) {
-      return dictionary[trimmed];
-    }
+    if (found == null) return null;
 
-    // 2. Bersihkan awalan angka & underscore/spasi (contoh: "0 0_halo" -> "halo", "1_nama" -> "nama")
-    var cleaned = trimmed;
-    if (cleaned.contains(' ')) {
-      cleaned = cleaned.split(' ').sublist(1).join(' ').trim();
-    }
-    cleaned = cleaned.replaceAll(RegExp(r'^[0-9]+[_\s]*'), '').trim();
+    // Personalisasi nama pengguna dinonaktifkan sementara sesuai permintaan pengguna
+    // if (userName != null && userName.trim().isNotEmpty && userName.trim().toLowerCase() != 'user') {
+    //   if (found.contains('Perkenalkan, nama saya')) {
+    //     return 'Perkenalkan, nama saya ${userName.trim()}';
+    //   }
+    // }
 
-    if (dictionary.containsKey(cleaned)) {
-      return dictionary[cleaned];
-    }
-
-    final lower = cleaned.toLowerCase();
-    if (dictionary.containsKey(lower)) {
-      return dictionary[lower];
-    }
-
-    final underscored = lower.replaceAll(' ', '_');
-    if (dictionary.containsKey(underscored)) {
-      return dictionary[underscored];
-    }
-
-    final spaced = lower.replaceAll('_', ' ');
-    if (dictionary.containsKey(spaced)) {
-      return dictionary[spaced];
-    }
-
-    return null;
+    return found;
   }
 
-  /// Menghasilkan nama gerakan yang rapi untuk tampilan badge UI (misal "0_halo" -> "Halo", "6_tanya_asal" -> "Tanya Asal")
+  /// Menghasilkan nama gerakan yang rapi untuk tampilan badge UI (misal "1 0_halo_apa_kabar" -> "Halo Apa Kabar", "5 4_terimakasih" -> "Terima Kasih")
   static String getDisplayName(String rawLabel) {
     var cleaned = rawLabel.trim();
     if (cleaned.contains(' ')) {
@@ -108,6 +117,12 @@ class SignVocabulary {
     cleaned = cleaned.replaceAll('_', ' ').trim();
 
     if (cleaned.isEmpty) return rawLabel;
+
+    final lower = cleaned.toLowerCase();
+    if (lower == 'terimakasih' || lower == 'terima kasih') {
+      return 'Terima Kasih';
+    }
+
     return cleaned.split(' ').where((w) => w.isNotEmpty).map((w) => w[0].toUpperCase() + (w.length > 1 ? w.substring(1).toLowerCase() : '')).join(' ');
   }
 
