@@ -4,15 +4,16 @@
 
 ![BENTARA Logo](assets/logos/logo_bentara_biru.webp)
 
-**Aplikasi Komunikasi Dua Arah & Penerjemah Bahasa Isyarat (BISINDO) Berbasis Kecerdasan Buatan (AI)**  
+**Aplikasi Komunikasi Dua Arah, AI Context Translator & Penerjemah Bahasa Isyarat (BISINDO) Berbasis On-Device Machine Learning & Cloud Edge AI**  
 *Dikembangkan untuk Kompetisi Mahasiswa Bidang Informatika Politeknik Nasional (KMIPN 2026)*
 
 [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.3.0-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-%3E%3D3.3.0-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Riverpod](https://img.shields.io/badge/State_Management-Riverpod_2.5-4053D6?style=for-the-badge)](https://riverpod.dev)
-[![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
-[![Groq AI](https://img.shields.io/badge/AI_Engine-Groq_Cloud-F55036?style=for-the-badge)](https://groq.com)
-[![TensorFlow Lite](https://img.shields.io/badge/On--Device_ML-TFLite-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/lite)
+[![Supabase](https://img.shields.io/badge/Backend-Supabase_Edge_Functions-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Groq AI](https://img.shields.io/badge/AI_Engine-Groq_Cloud_LLM-F55036?style=for-the-badge)](https://groq.com)
+[![TensorFlow Lite](https://img.shields.io/badge/On--Device_ML-TFLite_LSTM-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/lite)
+[![MediaPipe](https://img.shields.io/badge/Vision-MediaPipe_Landmarks-00A67E?style=for-the-badge)](https://developers.google.com/mediapipe)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-lightgrey?style=for-the-badge)]()
 
 </div>
@@ -22,16 +23,18 @@
 ## 📑 Daftar Isi
 
 - [📌 Tentang BENTARA](#-tentang-bentara)
-- [✨ Fitur-Fitur Utama](#-fitur-fitur-utama)
+- [✨ Fitur-Fitur Unggulan](#-fitur-fitur-unggulan)
 - [🏗️ Arsitektur Sistem & Alur Data](#️-arsitektur-sistem--alur-data)
 - [🤖 Pipeline Machine Learning & Computer Vision](#-pipeline-machine-learning--computer-vision)
+- [🔐 Arsitektur Keamanan & AI Backend](#-arsitektur-keamanan--ai-backend)
 - [🛠️ Tech Stack & Dependensi](#️-tech-stack--dependensi)
 - [📂 Struktur Direktori Proyek](#-struktur-direktori-proyek)
 - [🚀 Panduan Instalasi & Menjalankan Aplikasi](#-panduan-instalasi--menjalankan-aplikasi)
 - [⚙️ Konfigurasi Environment (`.env`)](#️-konfigurasi-environment-env)
-- [🧪 Pengujian & Validasi](#-pengujian--validasi)
+- [☁️ Panduan Deploy Supabase Edge Function](#️-panduan-deploy-supabase-edge-function)
+- [🧪 Pengujian & Validasi (Test Suite)](#-pengujian--validasi-test-suite)
 - [📱 Panduan Skenario Demo (Demo Runbook)](#-panduan-skenario-demo-demo-runbook)
-- [🎨 Prinsip Desain & Aksesibilitas](#-prinsip-desain--aksesibilitas)
+- [🎨 Prinsip Desain & Aksesibilitas (WCAG 2.1 AA)](#-prinsip-desain--aksesibilitas-wcag-21-aa)
 - [🗺️ Roadmap Pengembangan](#️-roadmap-pengembangan)
 - [👥 Kontributor & Lisensi](#-kontributor--lisensi)
 
@@ -39,109 +42,180 @@
 
 ## 📌 Tentang BENTARA
 
-**BENTARA** adalah aplikasi mobile inklusif yang dirancang untuk meruntuhkan batas komunikasi antara **Teman Tuli** (disabilitas rungu-wicara) dan **Teman Dengar** (masyarakat umum, tenaga medis, petugas pelayanan publik).
+**BENTARA** adalah ekosistem aplikasi komunikasi inklusif *mobile-first* yang didesain khusus untuk meruntuhkan batas komunikasi antara **Teman Tuli** (penyandang disabilitas rungu & wicara) dan **Teman Dengar** (masyarakat umum, tenaga medis, petugas pelayanan publik, dan keluarga).
 
-Seringkali, komunikasi sehari-hari mengalami hambatan karena:
-1. Keterbatasan pemahaman bahasa isyarat di kalangan masyarakat umum.
-2. Kalimat singkat atau kaku saat Teman Tuli mengetik pesan yang sering disalahartikan.
-3. Ketiadaan akses darurat yang ramah bagi penyandang disabilitas saat membutuhkan pertolongan medis/polisi dengan cepat.
+### 🔍 Latar Belakang & Masalah
+1. **Barrier Bahasa Isyarat**: Lebih dari 90% masyarakat umum belum menguasai BISINDO (*Bahasa Isyarat Indonesia*), menimbulkan kecanggungan dan hambatan dalam percakapan tatap muka.
+2. **Keterbatasan Konteks & Tata Bahasa**: Pesan teks yang diketik secara spontan oleh Teman Tuli kerap berstruktur ringkas/singkat (misal: *"obat pusing mana"*), yang terkadang disalahartikan kaku atau kurang formal dalam situasi profesional seperti di rumah sakit atau kantor administrasi.
+3. **Ketiadaan Akses Darurat Ramah Disabilitas**: Dalam keadaan kritis, penyandang disabilitas kesulitan memanggil bantuan medis/polisi dengan cepat dan mandiri tanpa perantara.
 
-**BENTARA** hadir sebagai solusi komprehensif melalui integrasi:
-- **Speech-to-Text (STT) & Text-to-Speech (TTS)** dua arah secara *real-time*.
-- **AI Context Translation** (Groq LLM) yang mengubah teks kaku menjadi kalimat santun dan kontekstual (Rumah Sakit, Pelayanan Publik, Umum).
-- **Penerjemah Bahasa Isyarat BISINDO** berbasis *On-Device Computer Vision* (MediaPipe Hand Landmark + LSTM TFLite).
-- **Tombol Darurat (SOS Emergency)** dengan siaran audio otomatis dan alarm visual.
+### 💡 Solusi Holistik BENTARA
+- **Komunikasi Dua Arah Real-time**: Menggabungkan *Live Speech-to-Text (STT)* dengan *Text-to-Speech (TTS)* natural.
+- **AI Context Translation**: Mentransformasi teks ringkas menjadi kalimat sopan dan kontekstual secara otomatis via **Supabase Edge Functions** bertenaga **Groq Cloud LLM** (`qwen/qwen3.8-27b`), dengan proteksi fallback kamus offline.
+- **Penerjemah Bahasa Isyarat BISINDO On-Device**: Deteksi gestur dua tangan (2-Hand Landmark Tracking) dengan model **TFLite LSTM** berkecepatan tinggi tanpa memerlukan koneksi internet.
+- **Mode Darurat SOS Cepat**: Alarm visual berkedip kontras tinggi disertai *looping voice broadcast* dan pengeras suara otomatis.
 
 ---
 
-## ✨ Fitur-Fitur Utama
+## ✨ Fitur-Fitur Unggulan
 
-### 1. 💬 Komunikasi Langsung Dua Arah (Two-Way Live Communication)
-- **Mode Teman Dengar**: Menangkap ucapan suara melalui mikrofon dan menampilkannya sebagai teks secara instan (*Real-time Speech-to-Text*).
-- **Mode Teman Tuli**: Mengetik balasan teks yang kemudian dapat disuarakan ke Teman Dengar menggunakan *Text-to-Speech* alami.
-- **Dukungan Audio On-Device**: Dapat beroperasi tanpa jeda (*low latency*).
+### 1. 💬 Komunikasi Langsung Dua Arah (Live Two-Way Communication)
+- **Voice Recording Bar Interaktif**: Visualizer audio reaktif yang mendeteksi suara ucapan Teman Dengar secara *real-time* dengan kontrol batal/kirim yang mulus.
+- **Live Message Editing Flow**: Fitur koreksi dan edit pesan instan sebelum dikirim atau disuarakan kembali, memastikan teks hasil pengenalan suara benar-benar akurat.
+- **Dual-Layer Context Bubble**: Bubble chat interaktif yang menampilkan teks asli masukan dan teks hasil terjemahan AI secara elegan dengan fitur *expand/collapse*, salin cepat, dan putar suara TTS.
+- **Mode Peran Pengguna**: Pengalaman yang disesuaikan secara dinamis untuk mode **Teman Tuli** (fokus teks & gestur) atau **Teman Dengar** (fokus suara & mikrofon).
 
-### 2. 🧠 AI Context Translation (Penerjemahan Konteks Otomatis)
-- **Transformasi Bahasa Kaku ke Formal**: Mengubah pesan singkat/kaku seperti *"obat pusing mana"* menjadi kalimat sopan sesuai konteks: *"Maaf Dokter, di mana saya bisa mendapatkan obat untuk sakit kepala saya?"*.
-- **Pilihan Preset Konteks**:
-  - 🏥 **Rumah Sakit (Medis)**: Menyesuaikan tata bahasa medis dan kata sapaan tenaga kesehatan (Dokter/Suster).
-  - 🏛️ **Layanan Publik**: Disesuaikan untuk keperluan administrasi kantor pemerintah (KTP, SIM, pengaduan).
-  - 🚨 **Darurat**: Kalimat darurat berprioritas tinggi.
-  - 🌐 **Umum**: Percakapan sehari-hari yang santun.
-- **Groq LLM Engine (`qwen/qwen3.8-27b`)**: Inferensi cloud secepat kilat (~300-500ms) dengan sistem filter pembersihan output.
-- **Fail-Safe Offline Engine**: Memiliki kamus kontekstual *rule-based* otomatis jika perangkat tidak memiliki koneksi internet.
+### 2. 🧠 AI Context Translation (Penerjemah Bahasa Kontekstual)
+- **Transformasi Bahasa Kaku ke Kalimat Formal**: Menyulap teks singkat menjadi kalimat yang santun, tertata, dan sesuai dengan situasi sosial.
+- **Preset Konteks Spesifik**:
+  - 🏥 **Rumah Sakit / Medis**: Disesuaikan dengan etika konsultasi dokter dan terminologi kesehatan (misal: *"Maaf Dokter, di mana saya bisa mendapatkan obat untuk sakit kepala saya?"*).
+  - 🏛️ **Layanan Publik**: Disesuaikan untuk urusan administrasi pemerintahan, pembuatan KTP, perbankan, dan pengaduan resmi.
+  - 🚨 **Darurat**: Format kalimat bernada mendesak dan langsung pada pokok pertolongan.
+  - 🌐 **Umum**: Percakapan sehari-hari yang ramah dan luwes.
+- **Arsitektur Multi-Tier**: Inferensi cloud cepat via Supabase Edge Function + Groq LLM API, didukung mesin *Rule-Based Offline Dictionary* sebagai jaminan kontinuitas tanpa internet.
 
-### 3. 🖐️ Penerjemah Isyarat BISINDO Real-Time (Computer Vision)
-- **Deteksi Dua Tangan (Dual-Hand Detection)**: Memanfaatkan kamera depan/belakang untuk mendeteksi gestur tangan secara simultan.
-- **Model LSTM 2-Tangan**: Mengekstrak 21 titik koordinat landmark per tangan (total 126 fitur per frame) dengan *sliding buffer* 30 frame.
-- **Kamus Kosakata BISINDO**:
-  - `halo`, `nama`, `kamu`, `siapa`, `terimakasih`, `makan`, `tidur`, `buku`, `telepon`, `menulis`, `jam`, `pusing`, `pintar`, `jalan`, `saya`.
-- **Fitur Penyusun Kalimat (Composed Sentence Builder)**: Menyusun kata demi kata yang terdeteksi menjadi kalimat utuh, yang dapat langsung **diucapkan (TTS)** atau **dikirim ke ruang obrolan**.
+### 3. 🖐️ Penerjemah Isyarat BISINDO Real-Time (On-Device Computer Vision)
+- **Deteksi 2-Tangan Simultan**: Melacak 21 titik pergelangan tangan & jari kiri dan kanan (total 126 fitur koordinat normal per frame).
+- **Model TFLite LSTM**: Pemrosesan buffer sekuensial 30 frame secara *real-time* langsung di dalam prosesor ponsel (*zero cloud latency* & hemat kuota).
+- **Kamus Kosakata BISINDO 15 Kelas**:
+  `halo`, `nama`, `kamu`, `siapa`, `terimakasih`, `makan`, `tidur`, `buku`, `telepon`, `menulis`, `jam`, `pusing`, `pintar`, `jalan`, `saya`.
+- **Composed Sentence Builder**: Merangkai kata demi kata yang terdeteksi menjadi kalimat utuh, siap disuarakan via TTS atau dikirimkan langsung ke ruang obrolan.
 
 ### 4. ⚡ Komunikasi Cepat (Quick Phrases)
-- Kumpulan frasa siap pakai untuk situasi penting dan mendesak.
-- Fitur pencarian instan (*live search*), filter kategori (Umum, Medis, Publik), penanda favorit (*star bookmark*), tombol salin cepat, dan tombol suara instan.
+- Frasa percakapan instan yang dikelompokkan dalam kategori: **Umum**, **Rumah Sakit / Medis**, **Layanan Publik**, **Transportasi**, **Belanja**, dan **Darurat**.
+- Pencarian cerdas (*live search*), penanda frasa favorit (*star bookmarking*), penambahan frasa kustom lokal, serta tombol *One-Tap TTS* dan *Kirim ke Chat*.
 
 ### 5. 🚨 Mode Darurat (Emergency SOS)
-- **Aktivasi 1-Ketuk**: Menampilkan alarm visual berkedip dan menyiarkan audio darurat berulang (*looping voice broadcast*).
-- **Kategori Darurat Cepat**:
+- **Aktivasi Cepat 1-Ketuk**: Mengaktifkan layar berkedip kontras tinggi (*high-visibility strobing alert*) dan siaran suara darurat berulang (*continuous audio broadcast loop*).
+- **Tombol Frasa Darurat Instan**:
   - *"SAYA BUTUH AMBULANS SEKARANG!"*
   - *"TOLONG HUBUNGI POLISI!"*
   - *"BAWA KE RUMAH SAKIT!"*
   - *"SAYA TERLUKA!"*
   - *"SAYA BUTUH BANTUAN!"*
-- Penghentian aman dengan dialog konfirmasi agar tidak sengaja tertekan.
+- **Sistem Penghentian Aman**: Mencegah penonaktifan darurat yang tidak disengaja melalui dialog konfirmasi berproteksi.
 
-### 6. 📜 Riwayat Percakapan (Conversation History)
-- Menyimpan seluruh transkrip sesi percakapan lengkap dengan tanggal dan kategori konteks.
-- Mendukung fitur *resume* percakapan serta gestur *swipe-to-delete*.
+### 6. 📜 Riwayat Percakapan (Conversation History & Sync)
+- Penyimpanan riwayat percakapan otomatis dengan label waktu dan konteks.
+- Sinkronisasi cloud Supabase Database saat online dan penyimpanan lokal *Hive NoSQL* super cepat saat offline.
 
-### 7. 👤 Profil Pengguna & Preferensi Peran
-- Mengelola identitas pengguna, foto profil (kamera/galeri/URL), dan pemilihan peran (**Teman Tuli** atau **Teman Dengar**).
-- Menampilkan metrik statistik penggunaan (Total Sesi, Pesan Dikirim, Bahasa).
-
-### 8. ⚙️ Pengaturan Aksesibilitas Komprehensif
-- **Mode Kontras Tinggi**: Meningkatkan ketegasan kontras teks dan latar belakang.
-- **Pengatur Ukuran Teks (Text Scaling)**: Memperbesar/memperkecil font sesuai kenyamanan mata.
-- **Pengatur Kecepatan (Speed) & Nada (Pitch) TTS**: Menyesuaikan artikulasi suara.
-- **Haptic Feedback (Getaran)** & Fitur Bersihkan Cache Lokal.
+### 7. 👤 Profil & Preferensi Aksesibilitas
+- **Manajemen Akun & Demo Mode**: Mendukung autentikasi Supabase serta mode demo instan tanpa login.
+- **Kustomisasi Aksesibilitas (WCAG Compliant)**:
+  - Mode Kontras Tinggi (*High Contrast Mode*).
+  - Skala Ukuran Font (*Dynamic Text Scaling 1.0x - 1.5x*).
+  - Pengatur Kecepatan (*Speech Rate*) dan Nada (*Pitch*) TTS.
+  - Pengatur Umpan Balik Getar (*Haptic Feedback*).
+  - Pengelola & Pembersih Cache Lokal.
 
 ---
 
 ## 🏗️ Arsitektur Sistem & Alur Data
 
-BENTARA dibangun dengan arsitektur modular yang memisahkan tanggung jawab (Clean Architecture + Riverpod State Management):
+BENTARA mengimplementasikan arsitektur bersih (*Clean Architecture*) berlapis dengan pola *Feature-First* yang dipadukan bersama **Riverpod 2.5** untuk *reactive state management*:
 
+```mermaid
+graph TD
+    subgraph UI_Layer ["Presentation Layer (Flutter)"]
+        CS[Communication Screen]
+        SR[Sign Recognition Camera]
+        EM[Emergency SOS Screen]
+        QP[Quick Phrases Screen]
+        VRB[Voice Recording Bar & Live STT]
+        EMD[Message Edit Dialog]
+    end
+
+    subgraph Logic_Layer ["Application & Domain Layer (Riverpod)"]
+        CP[Communication Provider]
+        SP[Sign Recognition Provider]
+        STTP[STT & TTS Controller]
+        QPRepo[Quick Phrases Repository]
+    end
+
+    subgraph Service_Layer ["Core Services & Fallback Engine"]
+        CTS[Context Translation Service]
+        HLService[Hand Landmark & Buffer Service]
+        SupaService[Supabase Client & Auth Service]
+        HiveStore[Hive Local NoSQL Database]
+        OfflineDict[Rule-Based Context Dictionary]
+    end
+
+    subgraph Cloud_And_Edge ["Backend & Edge Infrastructure"]
+        EdgeFunc[Supabase Edge Function: context-translation]
+        GroqLLM[Groq Cloud LLM API: qwen/qwen3.8-27b]
+        SupaDB[(Supabase PostgreSQL & Auth)]
+    end
+
+    subgraph OnDevice_ML ["On-Device Machine Learning Engine"]
+        MPTask[MediaPipe Hand Landmarker Task]
+        TFLiteModel[LSTM Classifier bisindo_model.tflite]
+    end
+
+    CS --> CP
+    VRB --> CP
+    EMD --> CP
+    SR --> SP
+    EM --> CP
+    QP --> QPRepo
+
+    CP --> CTS
+    CP --> STTP
+    CP --> SupaService
+    CP --> HiveStore
+    SP --> HLService
+
+    HLService --> MPTask
+    HLService --> TFLiteModel
+
+    CTS --> EdgeFunc
+    CTS -.->|Offline / Fallback| OfflineDict
+    EdgeFunc --> GroqLLM
+    SupaService --> SupaDB
+```
+
+---
 
 ## 🤖 Pipeline Machine Learning & Computer Vision
 
-Pipeline pengenalan Bahasa Isyarat BISINDO di BENTARA dirancang dengan performa tinggi untuk berjalan lancar pada perangkat *mobile* (*On-Device Inference*):
+Pipeline pengenalan Bahasa Isyarat BISINDO di BENTARA dirancang khusus untuk meminimalkan latensi dengan eksekusi 100% *on-device*:
 
 ```
-┌─────────────────┐     ┌────────────────────────┐     ┌─────────────────────────────┐
-│  Camera Stream  │ ──► │ MediaPipe Hand Detector│ ──► │  Hand Landmark Extractor    │
-│ (Live 30+ FPS)  │     │  (Left & Right Hands)  │     │ (21 Points x 3 Coords x 2)  │
-└─────────────────┘     └────────────────────────┘     └──────────────┬──────────────┘
-                                                                      │ (126 raw features)
-                                                                      ▼
-┌─────────────────┐     ┌────────────────────────┐     ┌─────────────────────────────┐
-│ Output Kalimat  │ ◄── │  Classification &      │ ◄── │   Normalization Engine      │
-│  TTS / Chat     │     │  Confidence Smoothing  │     │ (Wrist-relative & Scaling)  │
-└─────────────────┘     │    (Threshold ≥ 70%)   │     └──────────────┬──────────────┘
-                        └───────────▲────────────┘                    │ (126 normalized)
-                                    │                                 ▼
-                        ┌───────────┴────────────┐     ┌─────────────────────────────┐
-                        │   TFLite LSTM Model    │ ◄── │   Sliding Window Buffer     │
-                        │ (bisindo_model.tflite) │     │    (30 Consecutive Frames)  │
-                        └────────────────────────┘     └─────────────────────────────┘
+┌─────────────────────────┐     ┌──────────────────────────────────┐     ┌─────────────────────────────────┐
+│  Camera Stream (30 FPS) │ ──► │  MediaPipe Hand Landmarker Task  │ ──► │    Hand Landmark Extractor      │
+│  (Front / Back Camera)  │     │   (Left & Right Hand Tracking)   │     │  (21 Points × 3 Coords × 2 Hands) │
+└─────────────────────────┘     └──────────────────────────────────┘     └────────────────┬────────────────┘
+                                                                                          │ (126 raw features)
+                                                                                          ▼
+┌─────────────────────────┐     ┌──────────────────────────────────┐     ┌─────────────────────────────────┐
+│     Output Kalimat      │ ◄── │  Classification & Stabilization  │ ◄── │      Normalization Engine       │
+│  TTS Voice & Chat Sync  │     │  (Debounce & Confidence ≥ 70%)   │     │   (Wrist-Relative & Dist-Scale) │
+└─────────────────────────┘     └─────────────────▲────────────────┘     └────────────────┬────────────────┘
+                                                  │                                       │ (126 normalized)
+                                                  │                                       ▼
+                                        ┌─────────┴───────────────┐      ┌─────────────────────────────────┐
+                                        │    TFLite LSTM Model    │ ◄─── │      Sliding Window Buffer      │
+                                        │ (bisindo_model.tflite)  │      │     (30 Consecutive Frames)     │
+                                        └─────────────────────────┘      └─────────────────────────────────┘
 ```
 
-1. **Camera Stream**: Mengambil frame video secara *real-time* menggunakan paket `camera`.
-2. **MediaPipe Landmark Detection**: Mengekstrak 21 titik pergelangan dan ruas jari (x, y, z) untuk tangan kiri dan kanan.
-3. **Normalisasi**: Titik koordinat dinormalisasi relatif terhadap pergelangan tangan (*wrist-relative*) dan diskalakan dengan jarak maksimum ruas jari untuk memastikan invarian terhadap jarak pengguna ke kamera.
-4. **Sliding Window Buffer**: Mengumpulkan sequence 30 frame berturut-turut berbentuk matriks `[1, 30, 126]`.
-5. **LSTM Inference**: Model TFLite memprediksi probabilitas gestur secara *real-time*.
-6. **Confidence & Stability Smoothing**: Mengharuskan minimal 2 frame berturut-turut memiliki confidence $\ge 70\%$ sebelum kata diakui (*debouncing*), mencegah salah deteksi karena kedipan atau gerakan transisi.
+### Tahapan Pemrosesan:
+1. **Perekaman Frame**: Menangkap input visual melalui `camera` pada frame rate 30+ FPS.
+2. **MediaPipe Landmark Extraction**: Mendeteksi 21 sendi tangan (ruas jari & pergelangan) dalam 3 dimensi $(x, y, z)$ untuk kedua tangan.
+3. **Normalisasi Ruang**: Mengubah titik koordinat relatif terhadap pergelangan tangan (*wrist-relative coordinate system*) dan menyelaraskan skala jarak agar tahan terhadap variasi jarak tubuh ke kamera.
+4. **Sliding Buffer (30 Frames)**: Mengumpulkan sekuens temporal berdimensi `[1, 30, 126]`.
+5. **LSTM Classification**: Mengeksekusi inferensi model TFLite `bisindo_model.tflite` untuk memprediksi probabilitas label kata.
+6. **Debouncing & Confidence Filter**: Menerapkan ambang batas probabilitas $\ge 70\%$ dengan syarat kestabilan minimal 2 frame berturut-turut guna mengeliminasi *flickering* atau *false positive* saat transisi gerakan.
+
+---
+
+## 🔐 Arsitektur Keamanan & AI Backend
+
+Untuk menjamin keamanan kunci API (*Zero Secret Leak on Client*), BENTARA menerapkan arsitektur serverless modern:
+
+- **Supabase Edge Functions (`context-translation`)**: Seluruh pemanggilan ke LLM Groq Cloud dilakukan melalui fungsi Deno di tepi jaringan (*edge*).
+- **Supabase Secrets**: `GROQ_API_KEY` disimpan secara terenkripsi di server Supabase, sehingga aplikasi mobile Flutter hanya membutuhkan `SUPABASE_URL` dan `SUPABASE_ANON_KEY`.
+- **Proteksi Prompt Injection & Limitasi Input**: Edge Function dilengkapi validasi batas panjang karakter ($\le 500$ karakter), sanitasi tag, dan instruksi penegasan peran agar model tidak dapat dimanipulasi oleh input instruktif ilegal.
+- **Fail-Safe Offline Mode**: Apabila perangkat kehilangan sinyal internet, sistem secara otomatis beralih ke *Local Context Translation Engine* tanpa memblokir pengalaman pengguna.
 
 ---
 
@@ -149,21 +223,21 @@ Pipeline pengenalan Bahasa Isyarat BISINDO di BENTARA dirancang dengan performa 
 
 | Kategori | Teknologi / Library | Versi | Deskripsi Kegunaan |
 | :--- | :--- | :--- | :--- |
-| **Framework** | [Flutter](https://flutter.dev) | `SDK >= 3.3.0` | Framework lintas platform UI |
-| **Language** | [Dart](https://dart.dev) | `SDK >= 3.3.0` | Bahasa pemrograman utama |
+| **Framework** | [Flutter](https://flutter.dev) | `SDK >= 3.3.0` | Framework lintas platform utama |
+| **Language** | [Dart](https://dart.dev) & [TypeScript/Deno](https://deno.land) | `Dart >= 3.3.0` | Bahasa pemrograman aplikasi & Edge Function |
 | **State Management** | `flutter_riverpod` | `^2.5.1` | Manajemen state reaktif & Dependency Injection |
-| **Navigation** | `go_router` | `^14.2.0` | Routing deklaratif dengan dukungan deep link & guards |
-| **Backend as a Service** | `supabase_flutter` | `^2.5.6` | Cloud Authentication, PostgreSQL Database, Realtime |
-| **Local Storage** | `hive_flutter` | `^1.1.0` | Penyimpanan lokal NoSQL super cepat untuk mode offline |
-| **Cloud AI Engine** | Groq Cloud API | `v1` | LLM Context Translation (`qwen/qwen3.8-27b`) |
-| **On-Device ML** | `tflite_flutter` | `^0.12.1` | Menjalankan model LSTM BISINDO langsung di perangkat |
-| **Camera & Vision** | `camera` | `^0.10.5` | Mengakses stream kamera perangkat |
-| **Image Processing** | `image` & `image_picker` | `^4.9.2` / `^1.1.2` | Manipulasi gambar, kompresi, dan pemilihan avatar |
-| **Speech Processing** | `speech_to_text` | `^7.4.0` | Pengenalan suara (STT) real-time |
-| **Voice Synthesis** | `flutter_tts` | `^4.0.2` | Sintesis suara (TTS) multi-pitch dan speed |
-| **Permissions** | `permission_handler` | `^11.3.1` | Manajemen izin runtime (Kamera, Mic, Audio) |
-| **Config & Security** | `flutter_dotenv` | `^5.1.0` | Memuat API Key dan secrets dari `.env` |
-| **Graphics** | `flutter_svg` | `^2.0.10+1` | Rendering grafis vektor SVG |
+| **Routing** | `go_router` | `^14.2.0` | Navigasi deklaratif dan rute terproteksi |
+| **Backend as a Service** | `supabase_flutter` | `^2.5.6` | Autentikasi, Database PostgreSQL, dan Realtime sync |
+| **Edge Functions** | Supabase Edge Functions (Deno) | `Deno std@0.168.0` | Serverless backend perantara Groq AI dengan enkripsi rahasia |
+| **AI LLM Engine** | Groq Cloud API (`qwen/qwen3.8-27b`) | `v1` | Mesin inferensi LLM ultra-cepat (~300ms) |
+| **Local NoSQL Storage** | `hive_flutter` | `^1.1.0` | Penyimpanan lokal instan untuk offline cache & preferensi |
+| **On-Device ML** | `tflite_flutter` | `^0.12.1` | Runtime inferensi model LSTM BISINDO |
+| **Computer Vision** | MediaPipe Hand Landmarker | `task` | Ekstraksi 21 koordinat landmark tangan |
+| **Camera Access** | `camera` | `^0.10.5` | Perekaman stream kamera real-time |
+| **Speech-to-Text** | `speech_to_text` | `^7.4.0` | Pengenalan suara ucapan real-time |
+| **Text-to-Speech** | `flutter_tts` | `^4.0.2` | Sintesis ucapan suara natural multi-nada |
+| **Environment Config** | `flutter_dotenv` | `^5.1.0` | Pemuat variabel environment lokal |
+| **Vector Graphics** | `flutter_svg` | `^2.0.10+1` | Rendering ikon dan aset SVG |
 
 ---
 
@@ -171,44 +245,51 @@ Pipeline pengenalan Bahasa Isyarat BISINDO di BENTARA dirancang dengan performa 
 
 ```
 bentara/
-├── android/                   # Konfigurasi platform native Android
-├── assets/                    # Aset statis aplikasi
-│   ├── button/                # Grafis tombol interaktif
-│   ├── images/                # Ilustrasi dan artwork
-│   ├── logos/                 # Logo resmi BENTARA
-│   └── models/                # Model Machine Learning & Vocabulary
-│       ├── bisindo_model.tflite   # Model klasifikasi LSTM BISINDO
-│       ├── hand_landmarker.task   # Model MediaPipe Hand Landmarks
-│       └── label_map.json         # Pemetaan label gestur (15 kata)
-├── ios/                       # Konfigurasi platform native iOS
+├── android/                         # Konfigurasi native platform Android
+├── assets/                          # Aset statis aplikasi
+│   ├── button/                      # Asset tombol interaktif
+│   ├── images/                      # Ilustrasi dan artwork UI
+│   ├── logos/                       # Logo identitas resmi BENTARA
+│   └── models/                      # Model Machine Learning & Vocabulary
+│       ├── bisindo_model.tflite     # Model klasifikasi TFLite LSTM BISINDO
+│       ├── hand_landmarker.task     # Model MediaPipe Hand Landmarks
+│       └── label_map.json           # Pemetaan label 15 kata BISINDO
+├── ios/                             # Konfigurasi native platform iOS
 ├── lib/
-│   ├── core/                  # Utilitas inti, konfigurasi & tema
-│   │   ├── constants/         # Konstanta aplikasi & kunci env
-│   │   ├── errors/            # Error handling & exception classes
-│   │   ├── router/            # Definisi rute GoRouter (AppRouter)
-│   │   ├── services/          # Layanan Supabase & Hive storage
-│   │   ├── theme/             # Palet warna, tipografi, radius & spacing
-│   │   └── utils/             # Helper format tanggal, string, sanitasi
-│   ├── features/              # Modul fitur berbasis Clean Architecture
-│   │   ├── auth/              # Login, Register, Forgot Password & Demo Mode
-│   │   ├── communication/     # Komunikasi Langsung Dua Arah & AI Translation
-│   │   ├── emergency/         # Mode Darurat SOS & Audio Loop Broadcast
-│   │   ├── history/           # Riwayat percakapan & manajemen sesi
-│   │   ├── home/              # Halaman Dashboard Utama
-│   │   ├── onboarding/        # Panduan perkenalan pengguna baru
-│   │   ├── profile/           # Profil pengguna, peran & statistik
-│   │   ├── quick_communication/ # Kumpulan frasa siap pakai & filter
-│   │   ├── settings/          # Pengaturan aksesibilitas, TTS & cache
-│   │   ├── sign_recognition/  # Deteksi Bahasa Isyarat BISINDO via Kamera
-│   │   └── splash/            # Layar pembuka & inisialisasi aplikasi
-│   ├── shared/                # Komponen UI bersama (Buttons, Cards, Modals)
-│   │   └── widgets/
-│   └── main.dart              # Entry point utama aplikasi Flutter
-├── test/                      # Unit testing & model inspection tests
-├── .env                       # File konfigurasi environment (Private)
-├── .env.example               # Template contoh variabel environment
-├── pubspec.yaml               # Deklarasi paket dependensi Flutter
-└── README.md                  # Dokumentasi lengkap proyek
+│   ├── core/                        # Modul fondasi & utilitas global
+│   │   ├── constants/               # Konstanta kunci & konfigurasi env
+│   │   ├── errors/                  # Penanganan error & exception
+│   │   ├── router/                  # Definisi rute GoRouter (AppRouter)
+│   │   ├── services/                # Layanan Supabase & Hive
+│   │   ├── theme/                   # Tema warna, tipografi & dimensi
+│   │   └── utils/                   # Helper sanitasi teks, format, audio
+│   ├── features/                    # Modul fitur berbasis Clean Architecture
+│   │   ├── auth/                    # Login, Register, Forgot Password & Demo Mode
+│   │   ├── communication/           # Live STT/TTS, AI Translator, Bubble, & Edit Flow
+│   │   │   ├── models/              # Model data pesan & preset konteks
+│   │   │   ├── presentation/        # Layar chat, VoiceRecordingBar & EditDialog
+│   │   │   ├── providers/           # State notifier Riverpod untuk komunikasi
+│   │   │   └── services/            # Context translation & STT/TTS service
+│   │   ├── emergency/               # Mode Darurat SOS, Strobing UI & Audio Looper
+│   │   ├── history/                 # Riwayat percakapan & pencarian sesi
+│   │   ├── home/                    # Dashboard beranda utama
+│   │   ├── onboarding/              # Walkthrough panduan pengguna baru
+│   │   ├── profile/                 # Profil pengguna, statistik & ganti peran
+│   │   ├── quick_communication/     # Katalog frasa cepat & bookmark
+│   │   ├── settings/                # Pengaturan aksesibilitas & suara
+│   │   ├── sign_recognition/        # Deteksi BISINDO kamera & sentence builder
+│   │   └── splash/                  # Layar inisialisasi & splash screen
+│   ├── shared/                      # Widget UI pakai ulang (Buttons, Cards, Modals)
+│   └── main.dart                    # Entry point aplikasi Flutter
+├── supabase/                        # Konfigurasi Supabase Backend & Functions
+│   ├── functions/
+│   │   └── context-translation/     # Deno Edge Function untuk Groq LLM Translation
+│   │       └── index.ts
+│   └── config.toml                  # Konfigurasi lokal Supabase CLI
+├── test/                            # Unit test, widget test & responsive test suite
+├── .env.example                     # Template variabel environment
+├── pubspec.yaml                     # Manifest paket dan dependensi Flutter
+└── README.md                        # Dokumentasi komprehensif proyek
 ```
 
 ---
@@ -216,42 +297,41 @@ bentara/
 ## 🚀 Panduan Instalasi & Menjalankan Aplikasi
 
 ### 1. Prasyarat Sistem
-- **Flutter SDK**: Versi `3.3.0` atau yang lebih baru ([Panduan Instalasi Flutter](https://docs.flutter.dev/get-started/install)).
-- **Dart SDK**: Versi `3.3.0` ke atas (otomatis terpasang bersama Flutter).
-- **Android Studio** atau **VS Code** dengan ekstensi Flutter & Dart.
-- **Java Development Kit (JDK)**: OpenJDK 17+.
-- **Perangkat Fisik (Disarankan)**: Smartphone Android dengan kamera dan mikrofon aktif untuk menguji fitur kamera BISINDO dan pengenalan suara (STT).
+- **Flutter SDK**: Versi `^3.3.0` atau terbaru ([Panduan Instalasi Flutter](https://docs.flutter.dev/get-started/install)).
+- **Dart SDK**: Versi `^3.3.0` (terintegrasi dengan Flutter SDK).
+- **JDK**: OpenJDK 17 atau yang lebih baru.
+- **Android Studio / VS Code** dengan ekstensi Flutter & Dart terpasang.
+- **Smartphone Fisik Android** (Sangat disarankan) dengan kamera dan mikrofon aktif untuk pengujian STT dan kamera BISINDO secara optimal.
 
 ### 2. Kloning Repositori
 ```bash
-git clone https://github.com/your-username/bentara.git
-cd bentara
+git clone https://github.com/Fahmisanzz/Bentara.git
+cd Bentara
 ```
 
-### 3. Pasang Dependensi
+### 3. Instalasi Dependensi
 ```bash
 flutter pub get
 ```
 
-### 4. Konfigurasi File Environment (`.env`)
-Salin template `.env.example` menjadi `.env` pada direktori root proyek:
+### 4. Konfigurasi Environment (`.env`)
+Salin template `.env.example` ke file `.env` pada direktori root:
 ```bash
 cp .env.example .env
 ```
-Buka file `.env` dan lengkapi credential Anda:
+Buka file `.env` dan masukkan kredensial Supabase Anda:
 ```env
 SUPABASE_URL=https://your-supabase-project.supabase.co
 SUPABASE_ANON_KEY=your-supabase-anon-key
-GROQ_API_KEY=your-groq-api-key
 ```
 
 ### 5. Menjalankan Aplikasi
-Hubungkan perangkat Android Anda melalui USB Debugging atau jalankan emulator:
+Hubungkan perangkat Android Anda melalui kabel USB (aktifkan USB Debugging) atau gunakan emulator:
 ```bash
-# Menjalankan pada perangkat yang terhubung
+# Menjalankan dalam mode Debug
 flutter run
 
-# Menjalankan dalam mode rilis (performa optimal kamera & ML)
+# Menjalankan dalam mode Release (Direkomendasikan untuk performa optimal kamera & AI)
 flutter run --release
 ```
 
@@ -259,92 +339,134 @@ flutter run --release
 
 ## ⚙️ Konfigurasi Environment (`.env`)
 
-| Variabel | Deskripsi | Diperlukan? | Cara Mendapatkan |
+| Variabel | Deskripsi | Status | Keterangan |
 | :--- | :--- | :---: | :--- |
-| `SUPABASE_URL` | URL Endpoint proyek Supabase Anda | Ya | Buat proyek gratis di [supabase.com](https://supabase.com) -> *Project Settings* -> *API*. |
-| `SUPABASE_ANON_KEY` | Public Anon API Key Supabase | Ya | Tersedia di dashboard Supabase bagian *API Keys*. |
-| `GROQ_API_KEY` | API Key Groq Cloud untuk inferensi LLM | Ya | Dapatkan API Key di [console.groq.com](https://console.groq.com). |
+| `SUPABASE_URL` | URL endpoint proyek Supabase | **Wajib** | Ditemukan di Dashboard Supabase -> *Project Settings* -> *API*. |
+| `SUPABASE_ANON_KEY` | Public Anon API Key Supabase | **Wajib** | Ditemukan di Dashboard Supabase -> *Project Settings* -> *API*. |
 
-> 💡 **Catatan**: Jika API Key tidak diisi atau koneksi internet tidak tersedia, aplikasi secara otomatis mengaktifkan **Fallback Mode** sehingga fitur STT, TTS, dan Terjemahan Konteks tetap dapat digunakan secara *offline*.
+> 🔒 **Pemberitahuan Keamanan**: `GROQ_API_KEY` tidak lagi diletakkan di file `.env` aplikasi client, melainkan disimpan sebagai **Supabase Secret** di backend Edge Functions untuk mencegah kebocoran kunci API.
 
 ---
 
-## 🧪 Pengujian & Validasi
+## ☁️ Panduan Deploy Supabase Edge Function
 
-BENTARA dilengkapi dengan pengujian unit untuk memverifikasi fungsionalitas model, arsitektur data, dan logika bisnis:
+Jika Anda mengelola backend Supabase sendiri, deploy Edge Function `context-translation` dengan langkah berikut:
+
+1. **Pasang Supabase CLI**:
+   ```bash
+   npm install -g supabase
+   ```
+2. **Login ke Akun Supabase**:
+   ```bash
+   supabase login
+   ```
+3. **Hubungkan Proyek**:
+   ```bash
+   supabase link --project-ref your-project-id
+   ```
+4. **Atur Secret Kunci API Groq**:
+   ```bash
+   supabase secrets set GROQ_API_KEY=gsk_your_groq_api_key_here
+   ```
+5. **Deploy Fungsi**:
+   ```bash
+   supabase functions deploy context-translation --no-verify-jwt
+   ```
+
+---
+
+## 🧪 Pengujian & Validasi (Test Suite)
+
+Proyek BENTARA dilengkapi dengan rangkaian pengujian komprehensif yang mencakup pengujian unit, pengujian widget interaktif, dan pengujian responsivitas:
 
 ```bash
-# Menjalankan seluruh unit test
+# Menjalankan seluruh test suite
 flutter test
 
-# Menjalankan pengujian inspeksi model TFLite
-flutter test test/inspect_model_test.dart
+# Menjalankan uji alur perekaman suara (Voice Recording Bar)
+flutter test test/features/communication/voice_recording_flow_test.dart
+
+# Menjalankan uji dialog edit pesan (Message Edit Flow)
+flutter test test/features/communication/message_edit_test.dart
+
+# Menjalankan uji bubble terjemahan konteks
+flutter test test/features/communication/context_message_bubble_test.dart
+
+# Menjalankan uji logika penerjemahan konteks AI & offline fallback
+flutter test test/features/communication/context_translation_test.dart
+
+# Menjalankan uji responsivitas layout antar berbagai ukuran layar
+flutter test test/core/responsive_screens_test.dart
 ```
 
 ---
 
 ## 📱 Panduan Skenario Demo (Demo Runbook)
 
-Untuk presentasi atau pengujian langsung di hadapan dewan juri / audiens:
+Gunakan panduan skenario berikut saat presentasi langsung di hadapan dewan juri:
 
-### Skenario A: Komunikasi Langsung Dua Arah (STT ➔ TTS)
+### 🎬 Skenario 1: Komunikasi Dua Arah & Live Audio Recording
 1. Buka menu **"Komunikasi Langsung"**.
-2. **Teman Dengar**: Tekan tombol **Mikrofon**, lalu bicaralah:  
-   *"Halo, nama saya Budi. Saya dokter spesialis THT."*
-3. Teks suara akan otomatis muncul di layar Teman Tuli secara *real-time*.
-4. **Teman Tuli**: Balas dengan mengetik:  
-   *"Halo dokter, telinga kanan saya sakit sejak kemarin."* lalu klik tombol **Kirim / Ucapkan**.
-5. Suara TTS akan otomatis membacakan teks tersebut agar dapat didengar oleh Teman Dengar.
+2. **Teman Dengar**: Tekan tombol **Mikrofon** di bagian bawah. Bar perekaman suara interaktif akan muncul.
+3. Ucapkan kalimat:  
+   *"Halo, selamat pagi. Ada yang bisa saya bantu hari ini?"*
+4. Teks hasil STT akan langsung tertampil di layar Teman Tuli.
+5. **Teman Tuli**: Balas dengan mengetik atau memilih frasa cepat, lalu tekan **Kirim**.
+6. Tekan tombol **Speaker (TTS)** pada bubble chat untuk memperdengarkan suara balasan kepada Teman Dengar.
 
-### Skenario B: Penerjemahan Konteks AI (AI Context Translation)
-1. Di halaman Komunikasi Langsung, aktifkan ikon **Bintang / Magic Wand** di kanan atas.
-2. Pilih tab kategori **"Rumah Sakit"**.
-3. Ketikkan teks pendek/kaku: *"obat pusing mana"* lalu tekan kirim.
-4. AI Context Engine akan mengubah teks secara otomatis menjadi kalimat baku dan sopan:  
+### 🎬 Skenario 2: AI Context Translation & Live Edit
+1. Pada menu Komunikasi Langsung, aktifkan **AI Context Translation** (pilih preset **"Rumah Sakit"**).
+2. Ketik teks singkat/kasar: *"obat pusing mana"*.
+3. Tekan **Kirim**. AI Context Engine secara otomatis mengubah pesan menjadi:  
    *"Maaf Dokter, di mana saya bisa mendapatkan obat untuk sakit kepala saya?"*.
+4. Klik tombol **Edit (Pensil)** pada bubble chat untuk membuka dialog edit jika ingin menyesuaikan kata sebelum dibacakan oleh TTS.
 
-### Skenario C: Deteksi Bahasa Isyarat BISINDO
-1. Dari Beranda atau menu chat, buka **"Penerjemah Isyarat"**.
-2. Arahkan kamera ke tangan Anda dan peragakan isyarat (misal: *halo*, *nama*, *saya*).
-3. AI memindai landmark tangan dan menampilkan kata serta confidence score ($\ge 70\%$).
-4. Klik tombol **"Suara"** untuk membunyikan kalimat hasil deteksi, atau **"Kirim ke Chat"** untuk memindahkannya ke ruang obrolan.
+### 🎬 Skenario 3: Deteksi Bahasa Isyarat BISINDO (On-Device ML)
+1. Dari dashboard Beranda, buka **"Penerjemah Isyarat"**.
+2. Arahkan kamera depan/belakang ke kedua tangan Anda.
+3. Lakukan gerakan isyarat BISINDO (contoh: gestur *halo*, *saya*, *terimakasih*).
+4. Indikator akurasi akan menampilkan label kata yang terdeteksi ($\ge 70\%$).
+5. Rangkaian kata akan tersusun di bilah *Sentence Builder*.
+6. Tekan tombol **"Ucapkan"** untuk memperdengarkan suara, atau tombol **"Kirim ke Obrolan"** untuk membawanya langsung ke ruang chat.
 
-### Skenario D: Tombol Darurat (SOS Emergency)
-1. Tekan tombol besar **"MODE DARURAT"** di halaman utama.
-2. Pilih jenis darurat: *"SAYA BUTUH AMBULANS SEKARANG!"*.
-3. Layar akan berkedip merah terang dan suara sirine / audio darurat akan berulang kali disiarkan melalui pengeras suara HP hingga tombol **"Hentikan Siaran"** ditekan.
+### 🎬 Skenario 4: Mode Darurat SOS
+1. Tekan tombol darurat merah menyala **"MODE DARURAT"** di Beranda.
+2. Pilih kartu darurat: *"SAYA BUTUH AMBULANS SEKARANG!"*.
+3. Layar ponsel akan berkedip merah terang dan suara peringatan darurat akan disiarkan secara terus-menerus.
+4. Tekan tombol **"Hentikan Siaran"** dan konfirmasi untuk menonaktifkan mode darurat dengan aman.
 
 ---
 
-## 🎨 Prinsip Desain & Aksesibilitas
+## 🎨 Prinsip Desain & Aksesibilitas (WCAG 2.1 AA)
 
-Aplikasi BENTARA dirancang dengan mematuhi pedoman **Web Content Accessibility Guidelines (WCAG 2.1 AA)**:
-- 👁️ **Visual Clarity**: Hierarki warna biru-putih tegas (*Clean Solid Layering*), tanpa efek buram atau teks transparan yang sulit dibaca.
-- 🎯 **Target Sentuh Ergonomis**: Seluruh tombol interaktif memiliki target sentuh minimal **$48 \times 48\text{ px}$** untuk kenyamanan akses motorik.
-- 🔊 **Feedback Multimodal**: Kombinasi konfirmasi visual, getaran (*haptic*), dan suara (*audio feedback*) di setiap aksi penting.
-- 🌗 **High Contrast & Font Scaling**: Dukungan pembesaran font hingga 150% dan mode kontras tinggi bawaan di menu Pengaturan.
+Aplikasi BENTARA dirancang dengan mematuhi standar aksesibilitas internasional:
+- 👁️ **Kontras Visual Tinggi**: Memadukan warna biru tua (#1E3A8A) dan putih solid (#FFFFFF) yang memenuhi rasio kontras ketat WCAG AAA/AA tanpa transparansi buram yang melelahkan mata.
+- 🎯 **Target Sentuh Luas**: Semua tombol memiliki dimensi sentuh minimal **$48 \times 48\text{ px}$** untuk mempermudah navigasi motorik.
+- 📳 **Multimodal Feedback**: Setiap aksi penting disertai konfirmasi visual, haptic vibration, dan audio tone.
+- 🔠 **Skalabilitas Teks**: Mendukung perbesaran font hingga 150% tanpa merusak tata letak antarmuka (*Dynamic Viewport Responsive*).
 
 ---
 
 ## 🗺️ Roadmap Pengembangan
 
-- [x] **Fase 1**: Arsitektur inti, STT, TTS, dan integrasi Supabase Auth.
-- [x] **Fase 2**: Model klasifikasi gestur BISINDO on-device berbasis TFLite LSTM.
-- [x] **Fase 3**: AI Context Translation menggunakan Groq LLM API dan Fallback Dictionary.
-- [x] **Fase 4**: Fitur Tombol Darurat SOS, Komunikasi Cepat, dan Modul Aksesibilitas.
-- [ ] **Fase 5 (Mendatang)**:
-  - Ekspansi kosakata BISINDO ke 100+ kosakata dan pengenalan ekspresi wajah (*Facial Expression Tracking*).
-  - Integrasi koordinat GPS otomatis saat Mode Darurat SOS diaktifkan.
-  - Integrasi ke *Wearable Device* (Smartwatch) untuk notifikasi getar real-time.
+- [x] **Fase 1**: Fondasi arsitektur Clean Architecture, Riverpod, STT, TTS, dan Supabase Auth.
+- [x] **Fase 2**: Implementasi On-Device MediaPipe Hand Landmark & Klasifikasi BISINDO TFLite LSTM 15 kelas.
+- [x] **Fase 3**: AI Context Translation via Supabase Edge Function (Groq LLM) dengan perlindungan Zero API Leak & Offline Dictionary.
+- [x] **Fase 4**: Fitur Voice Recording Bar, Live Message Editing, Katalog Frasa Cepat Lengkap, dan Mode Darurat SOS Strobing.
+- [x] **Fase 5**: Pengujian komprehensif (Unit, Widget, Voice Flow, Responsive Screens).
+- [ ] **Fase 6 (Mendatang)**:
+  - Ekspansi perbendaharaan kosakata BISINDO ke 100+ kata dan pelacakan ekspresi wajah (*Facial Emotion Tracking*).
+  - Integrasi koordinat geolokasi GPS otomatis & SMS darurat ke kontak terdekat saat Mode SOS diaktifkan.
+  - Integrasi notifikasi getar pada perangkat *wearable* (Smartwatch).
 
 ---
 
 ## 👥 Kontributor & Lisensi
 
-Dikembangkan dengan dedikasi penuh untuk inklusivitas disabilitas Indonesia oleh Tim BENTARA (KMIPN 2026).
+Dikembangkan dengan dedikasi penuh untuk kemajuan inklusivitas disabilitas Indonesia oleh **Tim BENTARA** — Mahasiswa Politeknik Negeri Fakfak dalam ajang **Kompetisi Mahasiswa Bidang Informatika Politeknik Nasional (KMIPN 2026)**.
 
-Proyek ini dibuat oleh mahasiswa Politeknik Negeri Fakfak — Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk kepentingan edukasi dan sosial.
+Proyek ini dirilis untuk kepentingan sosial, edukasi, dan kemanusiaan.
 
 <div align="center">
-  <sub>Dibuat dengan ❤️ untuk Indonesia yang lebih inklusif dan ramah disabilitas.</sub>
+  <sub>🇮🇩 Bersama BENTARA, Setiap Suara dan Isyarat Memiliki Arti.</sub>
 </div>
