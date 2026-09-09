@@ -7,6 +7,8 @@ class MessageModel {
   final String? processedText;
   final String? outputText;
   final DateTime createdAt;
+  final bool isEdited;
+  final DateTime? updatedAt;
 
   const MessageModel({
     required this.id,
@@ -17,6 +19,8 @@ class MessageModel {
     this.processedText,
     this.outputText,
     required this.createdAt,
+    this.isEdited = false,
+    this.updatedAt,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class MessageModel {
       processedText: json['processed_text'],
       outputText: json['output_text'],
       createdAt: DateTime.parse(json['created_at']),
+      isEdited: json['is_edited'] ?? false,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
     );
   }
 
@@ -42,6 +48,8 @@ class MessageModel {
       'processed_text': processedText,
       'output_text': outputText,
       'created_at': createdAt.toIso8601String(),
+      'is_edited': isEdited,
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

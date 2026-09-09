@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -48,15 +47,6 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.white,
-    ));
 
     return Scaffold(
       backgroundColor: AppColors.primary,
@@ -181,81 +171,98 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 16.0 + bottomInset),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // USER STATS ROW
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatColumn('Total Sesi', profile.totalSessions.toString()),
-                            Container(width: 1.0, height: 32.0, color: Colors.grey.shade200),
-                            _buildStatColumn('Pesan Dikirim', profile.totalMessages.toString()),
-                            Container(width: 1.0, height: 32.0, color: Colors.grey.shade200),
-                            _buildStatColumn('Bahasa', 'ID'),
-                          ],
-                        ),
-                        const SizedBox(height: 20.0),
-                        
-                        // SECTION TITLE: PENGATURAN AKUN
-                        const Text(
-                          'Pengaturan Akun',
-                          style: TextStyle(
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 10.0),
-                        
-                        // MENU CARDS
-                        _buildMenuTile(
-                          icon: Icons.edit_rounded,
-                          title: 'Edit Profil',
-                          subtitle: 'Ubah informasi akun dan peran komunikasi',
-                          onTap: () => context.pushNamed('edit_profile'),
-                        ),
-                        const SizedBox(height: 10.0),
-                        _buildMenuTile(
-                          icon: Icons.settings_rounded,
-                          title: 'Pengaturan',
-                          subtitle: 'Kelola preferensi aplikasi',
-                          onTap: () => context.pushNamed('settings'),
-                        ),
-                        
-                        const Spacer(),
-                        
-                        // LOGOUT BUTTON (SOLID OPAQUE GRADIENT, SAFE FROM NAV BAR)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52.0,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _showLogoutDialog(context, ref),
-                            icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20.0),
-                            label: const Text(
-                              'Keluar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15.0,
-                                letterSpacing: 0.5,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 16.0 + bottomInset),
+                        child: SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight > (36.0 + bottomInset)
+                                  ? constraints.maxHeight - (36.0 + bottomInset)
+                                  : 0.0,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // USER STATS ROW
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Expanded(child: _buildStatColumn('Total Sesi', profile.totalSessions.toString())),
+                                      Container(width: 1.0, height: 32.0, color: Colors.grey.shade200),
+                                      Expanded(child: _buildStatColumn('Pesan Dikirim', profile.totalMessages.toString())),
+                                      Container(width: 1.0, height: 32.0, color: Colors.grey.shade200),
+                                      Expanded(child: _buildStatColumn('Bahasa', 'ID')),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20.0),
+                                  
+                                  // SECTION TITLE: PENGATURAN AKUN
+                                  const Text(
+                                    'Pengaturan Akun',
+                                    style: TextStyle(
+                                      fontSize: 15.0,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10.0),
+                                  
+                                  // MENU CARDS
+                                  _buildMenuTile(
+                                    icon: Icons.edit_rounded,
+                                    title: 'Edit Profil',
+                                    subtitle: 'Ubah informasi akun dan peran komunikasi',
+                                    onTap: () => context.pushNamed('edit_profile'),
+                                  ),
+                                  const SizedBox(height: 10.0),
+                                  _buildMenuTile(
+                                    icon: Icons.settings_rounded,
+                                    title: 'Pengaturan',
+                                    subtitle: 'Kelola preferensi aplikasi',
+                                    onTap: () => context.pushNamed('settings'),
+                                  ),
+                                  
+                                  const SizedBox(height: 16.0),
+                                  const Spacer(),
+                                  
+                                  // LOGOUT BUTTON (SOLID OPAQUE GRADIENT, SAFE FROM NAV BAR)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 52.0,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _showLogoutDialog(context, ref),
+                                      icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20.0),
+                                      label: const Text(
+                                        'Keluar',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15.0,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFE53935),
+                                        foregroundColor: Colors.white,
+                                        elevation: 2.0,
+                                        shadowColor: const Color(0xFFE53935).withValues(alpha: 0.35),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16.0),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE53935),
-                              foregroundColor: Colors.white,
-                              elevation: 2.0,
-                              shadowColor: const Color(0xFFE53935).withValues(alpha: 0.35),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -271,15 +278,24 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildStatColumn(String label, String value) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          value, 
-          style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value, 
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+          ),
         ),
         const SizedBox(height: 2.0),
-        Text(
-          label, 
-          style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label, 
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );

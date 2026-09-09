@@ -128,35 +128,38 @@ class OnboardingScreen extends StatelessWidget {
                             // SizedBox(width: 12) = jarak antara bird dan teks.
                             // letterSpacing: 2.5 = jarak antar huruf BENTARA.
                             // =============================================
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // --- Bird Icon ---
-                                Image.asset(
-                                  'assets/logos/logo_bentara_biru.webp',
-                                  height: 46.0,       // Ubah untuk resize bird icon
-                                  fit: BoxFit.contain, // Jaga aspect ratio
-                                ),
-                                const SizedBox(width: 12.0), // Jarak bird ↔ teks
-                                // --- Wordmark "BENTARA" ---
-                                Text(
-                                  'BENTARA',
-                                  style: TextStyle(
-                                    color: Colors.white,         // Warna teks
-                                    fontSize: 38.0,              // Ukuran font
-                                    fontWeight: FontWeight.w900, // Ketebalan (w100–w900)
-                                    letterSpacing: 2.5,          // Jarak antar huruf
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withValues(alpha: 0.45),
-                                        offset: const Offset(0, 2.0), // Arah shadow (x, y)
-                                        blurRadius: 5.0,              // Blur shadow
-                                      ),
-                                    ],
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // --- Bird Icon ---
+                                  Image.asset(
+                                    'assets/logos/logo_bentara_biru.webp',
+                                    height: 46.0,       // Ubah untuk resize bird icon
+                                    fit: BoxFit.contain, // Jaga aspect ratio
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 12.0), // Jarak bird ↔ teks
+                                  // --- Wordmark "BENTARA" ---
+                                  Text(
+                                    'BENTARA',
+                                    style: TextStyle(
+                                      color: Colors.white,         // Warna teks
+                                      fontSize: 38.0,              // Ukuran font
+                                      fontWeight: FontWeight.w900, // Ketebalan (w100–w900)
+                                      letterSpacing: 2.5,          // Jarak antar huruf
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.45),
+                                          offset: const Offset(0, 2.0), // Arah shadow (x, y)
+                                          blurRadius: 5.0,              // Blur shadow
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
 
                             // =============================================

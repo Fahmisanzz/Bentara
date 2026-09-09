@@ -7,7 +7,7 @@ import 'package:bentara/features/history/models/message_model.dart';
 void main() {
   group('Profile & Auth Model Tests', () {
     test('UserProfileModel serializes and deserializes with avatarUrl', () {
-      final model = UserProfileModel(
+      const model = UserProfileModel(
         id: 'user_123',
         name: 'Fahmi Testing',
         role: 'tuli',

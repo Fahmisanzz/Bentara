@@ -5,23 +5,12 @@ import '../../providers/history_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 
-import 'package:flutter/services.dart';
-
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(historyListProvider);
-
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.white,
-    ));
 
     return Scaffold(
       backgroundColor: AppColors.accentPink, // LAYER 1
@@ -112,25 +101,29 @@ class HistoryScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentPink.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPink.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.history_rounded, color: AppColors.accentPink, size: 22),
                       ),
-                      child: const Icon(Icons.history_rounded, color: AppColors.accentPink, size: 22),
+                      title: Text(item.title ?? 'Percakapan Tanpa Judul', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      subtitle: Text(item.context ?? 'Umum', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      trailing: Text('${item.startedAt.day}/${item.startedAt.month}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      onTap: () {
+                        context.pushNamed(
+                          RouteNames.communication,
+                          extra: {'conversationId': item.id},
+                        );
+                      },
                     ),
-                    title: Text(item.title ?? 'Percakapan Tanpa Judul', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    subtitle: Text(item.context ?? 'Umum', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    trailing: Text('${item.startedAt.day}/${item.startedAt.month}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                    onTap: () {
-                      context.pushNamed(
-                        RouteNames.communication,
-                        extra: {'conversationId': item.id},
-                      );
-                    },
                   ),
                 ),
               );

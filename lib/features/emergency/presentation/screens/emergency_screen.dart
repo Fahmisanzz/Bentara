@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,13 +23,23 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
   @override
   void initState() {
     super.initState();
-    _flashTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (ref.read(emergencyNotifierProvider)) {
-        setState(() {
-          _flashColorState = !_flashColorState;
+  }
+
+  void _updateFlashTimer(bool isActive) {
+    if (isActive) {
+      if (_flashTimer == null || !_flashTimer!.isActive) {
+        _flashTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+          if (mounted) {
+            setState(() {
+              _flashColorState = !_flashColorState;
+            });
+          }
         });
       }
-    });
+    } else {
+      _flashTimer?.cancel();
+      _flashTimer = null;
+    }
   }
 
   @override
@@ -41,20 +52,12 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
   Widget build(BuildContext context) {
     final isEmergencyActive = ref.watch(emergencyNotifierProvider);
     final notifier = ref.read(emergencyNotifierProvider.notifier);
+    _updateFlashTimer(isEmergencyActive);
 
     final currentUser = ref.watch(currentUserProvider);
     final profileState = ref.watch(profileNotifierProvider);
     final userName = profileState.profile?.name ?? currentUser?.name ?? 'Pengguna';
     final userEmail = currentUser?.email ?? 'user@bentara.id';
-
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.white,
-    ));
 
     if (isEmergencyActive) {
       return _buildActiveEmergencyUI(notifier);
@@ -62,137 +65,142 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.error,
-      body: Stack(
+      body: Column(
         children: [
-          // LAYER 1: SOLID BLUE BACKGROUND (Inherited from Scaffold backgroundColor)
-
-          // CONTENT
-          SafeArea(
-            bottom: true,
-            child: Column(
+          // LAYER 1: USER HEADER (Padded for status bar)
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.paddingOf(context).top + 10.0,
+              left: 20.0,
+              right: 20.0,
+              bottom: 10.0,
+            ),
+            child: Row(
               children: [
-                // LAYER 1: USER HEADER
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                  child: Row(
-                    children: [
-                      // Profile Avatar
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => context.pushNamed(RouteNames.profile),
-                          behavior: HitTestBehavior.opaque,
-                          child: Row(
+                // Profile Avatar
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => context.pushNamed(RouteNames.profile),
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44.0,
+                          height: 44.0,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2.0,
+                            ),
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          child: const ClipOval(
+                            child: Icon(
+                              Icons.person_rounded,
+                              color: AppColors.error,
+                              size: 26.0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                width: 44.0,
-                                height: 44.0,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2.0,
-                                  ),
-                                  color: Colors.white.withValues(alpha: 0.8),
+                              Text(
+                                userName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
                                 ),
-                                child: const ClipOval(
-                                  child: Icon(
-                                    Icons.person_rounded,
-                                    color: AppColors.error,
-                                    size: 26.0,
-                                  ),
-                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      userName,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.w800,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2.0),
-                                    Text(
-                                      userEmail,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12.0,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.1,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                              const SizedBox(height: 2.0),
+                              Text(
+                                userEmail,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.1,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
                         ),
-                      ),
-
-                      // Notification Bell
-                      Container(
-                        width: 40.0,
-                        height: 40.0,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          border: Border.all(color: Colors.white, width: 1.0),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(
-                            Icons.notifications_outlined,
-                            color: AppColors.error,
-                            size: 20.0,
-                          ),
-                          onPressed: () {
-                            context.pushNamed(RouteNames.history);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-
-                // LAYER 2: SOLID WHITE BOTTOM SHEET
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface, // Solid White
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(32.0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10.0,
-                          offset: const Offset(0, -4.0),
-                        ),
                       ],
                     ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final availableHeight = constraints.maxHeight;
-                        final iconSize = (availableHeight * 0.07).clamp(32.0, 48.0);
-                        final titleFontSize = (availableHeight * 0.025).clamp(14.0, 18.0);
-                        final buttonHeight = (availableHeight * 0.075).clamp(42.0, 54.0);
-                        final buttonFontSize = (availableHeight * 0.02).clamp(12.0, 15.0);
-                        final verticalGap = (availableHeight * 0.012).clamp(6.0, 12.0);
+                  ),
+                ),
 
-                        return Padding(
-                          padding: EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 20.0 + MediaQuery.paddingOf(context).bottom),
+                // Notification Bell
+                Container(
+                  width: 40.0,
+                  height: 40.0,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    border: Border.all(color: Colors.white, width: 1.0),
+                  ),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.error,
+                      size: 20.0,
+                    ),
+                    onPressed: () {
+                      context.pushNamed(RouteNames.history);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12.0),
+
+          // LAYER 2: SOLID WHITE BOTTOM SHEET (STRETCHES ALL THE WAY TO SCREEN BOTTOM EDGE)
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface, // Solid White
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, -4.0),
+                  ),
+                ],
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = constraints.maxHeight;
+                  final iconSize = (availableHeight * 0.07).clamp(28.0, 48.0);
+                  final titleFontSize = (availableHeight * 0.025).clamp(13.0, 18.0);
+                  final buttonHeight = (availableHeight * 0.075).clamp(38.0, 54.0);
+                  final buttonFontSize = (availableHeight * 0.02).clamp(11.0, 15.0);
+                  final verticalGap = (availableHeight * 0.012).clamp(4.0, 12.0);
+
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 16.0 + MediaQuery.paddingOf(context).bottom),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: math.max(0.0, constraints.maxHeight - 32.0 - MediaQuery.paddingOf(context).bottom),
+                        ),
+                        child: IntrinsicHeight(
                           child: Column(
                             children: [
                               // BENTARA BRANDING + MODE DARURAT
@@ -216,13 +224,19 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
                                     },
                                   ),
                                   const SizedBox(width: 8.0),
-                                  const Text(
-                                    'Mode Darurat',
-                                    style: TextStyle(
-                                      color: AppColors.error,
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.0,
+                                  const Expanded(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Mode Darurat',
+                                        style: TextStyle(
+                                          color: AppColors.error,
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -305,12 +319,12 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
                               const Spacer(flex: 2),
                             ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -382,184 +396,198 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
           bottom: false,
           child: Padding(
             padding: EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 24.0 + bottomInset),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Top Status Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.radio_button_checked_rounded, color: Colors.white, size: 14.0),
-                      SizedBox(width: 8.0),
-                      Text(
-                        'SIARAN DARURAT AKTIF',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.0,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-
-                // Pulsing Speaker Icon
-                const _PulsingSpeakerIcon(),
-                const SizedBox(height: 24.0),
-
-                // Main Title
-                const Text(
-                  'SIARAN DARURAT AKTIF',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22.0,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 6.0),
-                Text(
-                  'Suara darurat sedang diputar',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.0,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-
-                // Message Card Header
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'PESAN YANG DISIARKAN',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white.withValues(alpha: 0.85),
-                      letterSpacing: 0.8,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: math.max(0.0, constraints.maxHeight),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10.0),
-
-                // Solid White Message Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(22.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 16.0,
-                        offset: const Offset(0, 6.0),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Top Status Badge
                           Container(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD32F2F).withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                             ),
-                            child: const Icon(
-                              Icons.campaign_rounded,
-                              color: Color(0xFFD32F2F),
-                              size: 20.0,
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.radio_button_checked_rounded, color: Colors.white, size: 14.0),
+                                SizedBox(width: 8.0),
+                                Text(
+                                  'SIARAN DARURAT AKTIF',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12.0,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 10.0),
+                          const Spacer(),
+
+                          // Pulsing Speaker Icon
+                          const _PulsingSpeakerIcon(),
+                          const SizedBox(height: 24.0),
+
+                          // Main Title
                           const Text(
-                            'Pesan Darurat',
+                            'SIARAN DARURAT AKTIF',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 22.0,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 6.0),
+                          Text(
+                            'Suara darurat sedang diputar',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 13.0,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+
+                          // Message Card Header
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'PESAN YANG DISIARKAN',
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10.0),
+
+                          // Solid White Message Card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 16.0,
+                                  offset: const Offset(0, 6.0),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD32F2F).withValues(alpha: 0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.campaign_rounded,
+                                        color: Color(0xFFD32F2F),
+                                        size: 20.0,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10.0),
+                                    const Text(
+                                      'Pesan Darurat',
+                                      style: TextStyle(
+                                        fontSize: 13.0,
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14.0),
+                                Text(
+                                  notifier.activeMessage,
+                                  style: const TextStyle(
+                                    fontSize: 18.0,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFFB71C1C),
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+
+                          // Status Information Subtitle Below Card
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.volume_up_rounded,
+                                size: 16.0,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                              const SizedBox(width: 8.0),
+                              Text(
+                                'Pesan sedang diputar melalui pengeras suara',
+                                style: TextStyle(
+                                  fontSize: 13.0,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+
+                          // CTA Button ("HENTIKAN SIARAN")
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56.0,
+                            child: ElevatedButton(
+                              onPressed: () => _showStopConfirmationDialog(context, notifier),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFFB71C1C),
+                                elevation: 4.0,
+                                shadowColor: Colors.black.withValues(alpha: 0.3),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.0),
+                                ),
+                              ),
+                              child: const Text(
+                                'HENTIKAN SIARAN',
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14.0),
-                      Text(
-                        notifier.activeMessage,
-                        style: const TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFB71C1C),
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-
-                // Status Information Subtitle Below Card
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.volume_up_rounded,
-                      size: 16.0,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Text(
-                      'Pesan sedang diputar melalui pengeras suara',
-                      style: TextStyle(
-                        fontSize: 13.0,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-
-                // CTA Button ("HENTIKAN SIARAN")
-                SizedBox(
-                  width: double.infinity,
-                  height: 56.0,
-                  child: ElevatedButton(
-                    onPressed: () => _showStopConfirmationDialog(context, notifier),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFFB71C1C),
-                      elevation: 4.0,
-                      shadowColor: Colors.black.withValues(alpha: 0.3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text(
-                      'HENTIKAN SIARAN',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                      ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -644,7 +672,7 @@ class _EmergencyActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: height,
+      constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
         color: AppColors.error,
         borderRadius: BorderRadius.circular(14.0),
@@ -664,15 +692,21 @@ class _EmergencyActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14.0),
           splashColor: Colors.white.withValues(alpha: 0.2),
           highlightColor: Colors.white.withValues(alpha: 0.1),
-          child: Center(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.4,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
+                ),
               ),
             ),
           ),

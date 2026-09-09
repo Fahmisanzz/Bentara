@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -196,207 +197,220 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 16.0 + bottomInset),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Avatar Preview with camera badge (Interactive Pick)
-                Center(
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: Stack(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 16.0 + bottomInset),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: math.max(0.0, constraints.maxHeight - 24.0 - bottomInset),
+                ),
+                child: IntrinsicHeight(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(3.0),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: AppGradients.lightBlue,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 8.0,
-                                offset: const Offset(0, 3.0),
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            radius: 46.0,
-                            backgroundColor: Colors.white,
-                            backgroundImage: _pickedImagePath != null
-                                ? (_pickedImagePath!.startsWith('http')
-                                    ? NetworkImage(_pickedImagePath!) as ImageProvider
-                                    : (_pickedImagePath!.startsWith('data:')
-                                        ? MemoryImage(base64Decode(_pickedImagePath!.split(',').last)) as ImageProvider
-                                        : FileImage(File(_pickedImagePath!))))
-                                : null,
-                            child: _pickedImagePath == null
-                                ? const Icon(Icons.person_rounded, size: 48.0, color: AppColors.primary)
-                                : null,
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(7.0),
-                            decoration: BoxDecoration(
-                              gradient: AppGradients.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 4.0,
-                                  offset: const Offset(0, 2.0),
+                        // Avatar Preview with camera badge (Interactive Pick)
+                        Center(
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(3.0),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: AppGradients.lightBlue,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 8.0,
+                                        offset: const Offset(0, 3.0),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 46.0,
+                                    backgroundColor: Colors.white,
+                                    backgroundImage: _pickedImagePath != null
+                                        ? (_pickedImagePath!.startsWith('http')
+                                            ? NetworkImage(_pickedImagePath!) as ImageProvider
+                                            : (_pickedImagePath!.startsWith('data:')
+                                                ? MemoryImage(base64Decode(_pickedImagePath!.split(',').last)) as ImageProvider
+                                                : FileImage(File(_pickedImagePath!))))
+                                        : null,
+                                    child: _pickedImagePath == null
+                                        ? const Icon(Icons.person_rounded, size: 48.0, color: AppColors.primary)
+                                        : null,
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7.0),
+                                    decoration: BoxDecoration(
+                                      gradient: AppGradients.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 4.0,
+                                          offset: const Offset(0, 2.0),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(Icons.camera_alt_rounded, size: 16.0, color: Colors.white),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.camera_alt_rounded, size: 16.0, color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 16.0),
+
+                        // Email Field (Read Only)
+                        const Text(
+                          'Email Akun',
+                          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
+                        ),
+                        const SizedBox(height: 6.0),
+                        TextFormField(
+                          initialValue: currentUser?.email ?? 'user@bentara.id',
+                          enabled: false,
+                          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500, fontSize: 14.0),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.email_rounded, color: AppColors.textSecondary, size: 20.0),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FA),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                              borderSide: BorderSide.none,
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14.0),
+
+                        // Name Field
+                        const Text(
+                          'Nama Lengkap',
+                          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
+                        ),
+                        const SizedBox(height: 6.0),
+                        TextFormField(
+                          controller: _nameController,
+                          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 14.0),
+                          decoration: InputDecoration(
+                            hintText: 'Masukkan nama lengkap',
+                            hintStyle: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.normal),
+                            prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 20.0),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                              borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
+                            ),
+                          ),
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) {
+                              return 'Nama tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16.0),
+
+                        // Role Selection Header
+                        const Text(
+                          'Peran Utama',
+                          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
+                        ),
+                        const SizedBox(height: 4.0),
+                        const Text(
+                          'Pilih peran untuk menyesuaikan fitur utama komunikasi Anda di dalam aplikasi.',
+                          style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
+                        ),
+                        const SizedBox(height: 10.0),
+
+                        // Role Cards Row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _RoleCard(
+                                title: 'Teman Tuli',
+                                subtitle: 'Bahasa Isyarat',
+                                icon: Icons.sign_language_rounded,
+                                isSelected: _selectedRole == 'tuli',
+                                gradient: AppGradients.green,
+                                onTap: () => setState(() => _selectedRole = 'tuli'),
+                              ),
+                            ),
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: _RoleCard(
+                                title: 'Teman Dengar',
+                                subtitle: 'Bahasa Lisan',
+                                icon: Icons.hearing_rounded,
+                                isSelected: _selectedRole == 'dengar',
+                                gradient: AppGradients.lightBlue,
+                                onTap: () => setState(() => _selectedRole = 'dengar'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 24.0),
+                        const Spacer(),
+
+                        // Save Button (Solid Opaque Gradient Button)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50.0,
+                          child: ElevatedButton(
+                            onPressed: profileState.isLoading ? null : _handleSave,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 2.0,
+                              shadowColor: AppColors.primary.withValues(alpha: 0.35),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                            ),
+                            child: profileState.isLoading
+                                ? const SizedBox(
+                                    height: 22.0,
+                                    width: 22.0,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : const Text(
+                                    'Simpan Perubahan',
+                                    style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                                  ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16.0),
-
-                // Email Field (Read Only)
-                const Text(
-                  'Email Akun',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
-                ),
-                const SizedBox(height: 6.0),
-                TextFormField(
-                  initialValue: currentUser?.email ?? 'user@bentara.id',
-                  enabled: false,
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500, fontSize: 14.0),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.email_rounded, color: AppColors.textSecondary, size: 20.0),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F7FA),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14.0),
-
-                // Name Field
-                const Text(
-                  'Nama Lengkap',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
-                ),
-                const SizedBox(height: 6.0),
-                TextFormField(
-                  controller: _nameController,
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 14.0),
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan nama lengkap',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.normal),
-                    prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 20.0),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
-                    ),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
-
-                // Role Selection Header
-                const Text(
-                  'Peran Utama',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 13.5),
-                ),
-                const SizedBox(height: 4.0),
-                const Text(
-                  'Pilih peran untuk menyesuaikan fitur utama komunikasi Anda di dalam aplikasi.',
-                  style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
-                ),
-                const SizedBox(height: 10.0),
-
-                // Role Cards Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RoleCard(
-                        title: 'Teman Tuli',
-                        subtitle: 'Bahasa Isyarat',
-                        icon: Icons.sign_language_rounded,
-                        isSelected: _selectedRole == 'tuli',
-                        gradient: AppGradients.green,
-                        onTap: () => setState(() => _selectedRole = 'tuli'),
-                      ),
-                    ),
-                    const SizedBox(width: 12.0),
-                    Expanded(
-                      child: _RoleCard(
-                        title: 'Teman Dengar',
-                        subtitle: 'Bahasa Lisan',
-                        icon: Icons.hearing_rounded,
-                        isSelected: _selectedRole == 'dengar',
-                        gradient: AppGradients.lightBlue,
-                        onTap: () => setState(() => _selectedRole = 'dengar'),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const Spacer(),
-
-                // Save Button (Solid Opaque Gradient Button)
-                SizedBox(
-                  width: double.infinity,
-                  height: 50.0,
-                  child: ElevatedButton(
-                    onPressed: profileState.isLoading ? null : _handleSave,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2.0,
-                      shadowColor: AppColors.primary.withValues(alpha: 0.35),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-                    ),
-                    child: profileState.isLoading
-                        ? const SizedBox(
-                            height: 22.0,
-                            width: 22.0,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                          )
-                        : const Text(
-                            'Simpan Perubahan',
-                            style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

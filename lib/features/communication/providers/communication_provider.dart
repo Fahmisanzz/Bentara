@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -32,6 +33,10 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
   final _uuid = const Uuid();
   bool _isConversationSavedInDb = false;
 
+  Timer? _recordingTimer;
+  String _accumulatedText = '';
+  String _sessionText = '';
+
   CommunicationNotifier(this._sttService, this._ttsService, this._translationService, this._conversationRepository, this._ref)
       : super(CommunicationState.initial()) {
     _initServices();
@@ -40,21 +45,34 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
   Future<void> _initServices() async {
     await _sttService.initialize();
     await _ttsService.initialize();
-    _startNewConversation();
+    if (state.activeConversationId == null) {
+      state = state.copyWith(activeConversationId: _uuid.v4());
+    }
   }
 
   void reset() {
+    _cleanupRecording();
     _startNewConversation();
   }
 
   void startNewSessionIfSaved() {
     if (_isConversationSavedInDb) {
+      _cleanupRecording();
       _startNewConversation();
     }
   }
 
   Future<void> loadConversation(String conversationId) async {
-    state = state.copyWith(activeConversationId: conversationId, messages: [], isListening: false);
+    _cleanupRecording();
+    state = state.copyWith(
+      activeConversationId: conversationId,
+      messages: [],
+      isListening: false,
+      isRecordingPaused: false,
+      recordingDurationSeconds: 0,
+      soundLevel: 0.0,
+      currentRecognizedText: '',
+    );
     _isConversationSavedInDb = true;
     try {
       final historyRepo = _ref.read(historyRepoProvider);
@@ -69,6 +87,8 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
           sourceType: m.inputType == 'voice' ? SourceType.stt : (m.inputType == 'sign' ? SourceType.sign : SourceType.textInput),
           contextualText: m.processedText,
           originalText: m.originalText,
+          isEdited: m.isEdited,
+          updatedAt: m.updatedAt,
         );
       }).toList();
       
@@ -80,7 +100,15 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
 
   Future<void> _startNewConversation() async {
     final convoId = _uuid.v4();
-    state = state.copyWith(activeConversationId: convoId, messages: []);
+    state = state.copyWith(
+      activeConversationId: convoId,
+      messages: [],
+      isListening: false,
+      isRecordingPaused: false,
+      recordingDurationSeconds: 0,
+      soundLevel: 0.0,
+      currentRecognizedText: '',
+    );
     _isConversationSavedInDb = false;
   }
 
@@ -92,29 +120,164 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
     state = state.copyWith(enableContextTranslation: enabled);
   }
 
-  Future<void> toggleListening() async {
-    if (state.isListening) {
+  void _cleanupRecording() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    _accumulatedText = '';
+    _sessionText = '';
+  }
+
+  // ==========================================
+  // VOICE RECORDING (TEMAN DENGAR - POV)
+  // WhatsApp Flow: Record -> Pause/Resume -> Delete/Send
+  // ==========================================
+
+  Future<void> startVoiceRecording() async {
+    final hasPerm = await _sttService.initialize();
+    if (!hasPerm) {
+      state = state.copyWith(errorMessage: 'Izin mikrofon ditolak.');
+      return;
+    }
+
+    _cleanupRecording();
+    state = state.copyWith(
+      isListening: true,
+      isRecordingPaused: false,
+      recordingDurationSeconds: 0,
+      soundLevel: 0.0,
+      currentRecognizedText: '',
+      errorMessage: null,
+    );
+
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && state.isListening && !state.isRecordingPaused) {
+        state = state.copyWith(recordingDurationSeconds: state.recordingDurationSeconds + 1);
+      }
+    });
+
+    await _sttService.startListening(
+      onResult: (text) {
+        if (!mounted || !state.isListening || state.isRecordingPaused) return;
+        _sessionText = text;
+        final combined = _accumulatedText.isEmpty
+            ? _sessionText
+            : (_sessionText.isEmpty ? _accumulatedText : '$_accumulatedText $_sessionText');
+        state = state.copyWith(currentRecognizedText: combined);
+      },
+      onSoundLevelChange: (level) {
+        if (mounted && state.isListening && !state.isRecordingPaused) {
+          state = state.copyWith(soundLevel: level);
+        }
+      },
+      onStatus: (status) {
+        debugPrint('STT Status: $status');
+      },
+      onError: (err) {
+        debugPrint('STT Error: $err');
+      },
+    );
+  }
+
+  Future<void> pauseVoiceRecording() async {
+    if (!state.isListening || state.isRecordingPaused) return;
+
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    _accumulatedText = state.currentRecognizedText.trim();
+    _sessionText = '';
+    await _sttService.stopListening();
+
+    state = state.copyWith(
+      isRecordingPaused: true,
+      soundLevel: 0.0,
+    );
+  }
+
+  Future<void> resumeVoiceRecording() async {
+    if (!state.isListening || !state.isRecordingPaused) return;
+
+    _sessionText = '';
+    state = state.copyWith(isRecordingPaused: false);
+
+    _recordingTimer?.cancel();
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && state.isListening && !state.isRecordingPaused) {
+        state = state.copyWith(recordingDurationSeconds: state.recordingDurationSeconds + 1);
+      }
+    });
+
+    await _sttService.startListening(
+      onResult: (text) {
+        if (!mounted || !state.isListening || state.isRecordingPaused) return;
+        _sessionText = text;
+        final combined = _accumulatedText.isEmpty
+            ? _sessionText
+            : (_sessionText.isEmpty ? _accumulatedText : '$_accumulatedText $_sessionText');
+        state = state.copyWith(currentRecognizedText: combined);
+      },
+      onSoundLevelChange: (level) {
+        if (mounted && state.isListening && !state.isRecordingPaused) {
+          state = state.copyWith(soundLevel: level);
+        }
+      },
+      onError: (err) {
+        debugPrint('STT Error on resume: $err');
+      },
+    );
+  }
+
+  Future<void> cancelVoiceRecording() async {
+    _cleanupRecording();
+    await _sttService.cancelListening();
+    state = state.copyWith(
+      isListening: false,
+      isRecordingPaused: false,
+      recordingDurationSeconds: 0,
+      soundLevel: 0.0,
+      currentRecognizedText: '',
+      errorMessage: null,
+    );
+  }
+
+  Future<void> sendVoiceRecording() async {
+    if (!state.isListening) return;
+
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    state = state.copyWith(isSendingVoice: true);
+    String? error;
+
+    try {
       await _sttService.stopListening();
       final rawText = state.currentRecognizedText.trim();
-      state = state.copyWith(isListening: false, currentRecognizedText: '');
 
       if (rawText.isNotEmpty) {
         await _processAndAddMessage(rawText, SenderType.userDengar, SourceType.stt);
+      } else {
+        error = 'Tidak ada suara/kata yang terdeteksi.';
       }
-    } else {
-      final hasPerm = await _sttService.initialize();
-      if (!hasPerm) {
-        state = state.copyWith(errorMessage: 'Izin mikrofon ditolak.');
-        return;
-      }
-      
-      state = state.copyWith(isListening: true, currentRecognizedText: '', errorMessage: null);
-      
-      await _sttService.startListening(
-        onResult: (text) {
-          state = state.copyWith(currentRecognizedText: text);
-        },
+    } catch (e) {
+      error = 'Gagal mengirim pesan suara: $e';
+    } finally {
+      _accumulatedText = '';
+      _sessionText = '';
+      state = state.copyWith(
+        isListening: false,
+        isRecordingPaused: false,
+        recordingDurationSeconds: 0,
+        soundLevel: 0.0,
+        currentRecognizedText: '',
+        isSendingVoice: false,
+        errorMessage: error,
       );
+    }
+  }
+
+  Future<void> toggleListening() async {
+    if (state.isListening) {
+      await sendVoiceRecording();
+    } else {
+      await startVoiceRecording();
     }
   }
 
@@ -132,6 +295,55 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) state = state.copyWith(isSpeaking: false);
     });
+  }
+
+  /// Mengedit teks pesan yang sudah terkirim (Teman Tuli maupun Teman Dengar).
+  /// Memvalidasi batas usia pesan <= 3 jam, dan teks tidak boleh kosong.
+  Future<bool> editMessage(String messageId, String newText) async {
+    final trimmed = newText.trim();
+    if (trimmed.isEmpty) {
+      state = state.copyWith(errorMessage: 'Pesan tidak boleh kosong.');
+      return false;
+    }
+
+    final index = state.messages.indexWhere((m) => m.id == messageId);
+    if (index == -1) {
+      state = state.copyWith(errorMessage: 'Pesan tidak ditemukan.');
+      return false;
+    }
+
+    final originalMessage = state.messages[index];
+
+    // Validasi Batas Waktu 3 Jam (180 menit)
+    final elapsed = DateTime.now().difference(originalMessage.timestamp);
+    if (elapsed > const Duration(hours: 3)) {
+      state = state.copyWith(errorMessage: 'Pesan tidak dapat diedit karena batas waktu 3 jam telah berakhir.');
+      return false;
+    }
+
+    final now = DateTime.now();
+    final updatedMessage = originalMessage.copyWith(
+      text: trimmed,
+      originalText: originalMessage.originalText ?? originalMessage.text,
+      isEdited: true,
+      updatedAt: now,
+    );
+
+    final updatedList = List<ChatMessageModel>.from(state.messages);
+    updatedList[index] = updatedMessage;
+    state = state.copyWith(messages: updatedList, errorMessage: null);
+
+    // Sinkronkan perubahan ke cache lokal Hive dan backend Supabase
+    final convoId = state.activeConversationId;
+    if (convoId != null) {
+      try {
+        await _conversationRepository.updateMessage(convoId, messageId, trimmed, updatedAt: now);
+      } catch (e) {
+        debugPrint('Gagal menyinkronkan pembaruan pesan: $e');
+      }
+    }
+
+    return true;
   }
 
   Future<void> _processAndAddMessage(String rawText, SenderType sender, SourceType source) async {
@@ -189,7 +401,9 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
         id: convoId,
       );
       _isConversationSavedInDb = true;
-      _ref.read(historyListProvider.notifier).loadHistory();
+      try {
+        _ref.read(historyListProvider.notifier).loadHistory();
+      } catch (_) {}
     }
     await _conversationRepository.saveMessage(convoId, newMessage);
   }
@@ -197,6 +411,14 @@ class CommunicationNotifier extends StateNotifier<CommunicationState> {
   void clearChat() {
     state = state.copyWith(messages: []);
     _startNewConversation(); // Start a fresh session ID in DB
+  }
+
+  @override
+  void dispose() {
+    _cleanupRecording();
+    _sttService.cancelListening();
+    _ttsService.stop();
+    super.dispose();
   }
 }
 
@@ -209,3 +431,4 @@ final communicationNotifierProvider = StateNotifierProvider<CommunicationNotifie
     ref,
   );
 });
+

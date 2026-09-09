@@ -1,19 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../models/chat_message_model.dart';
 import '../../models/context_preset.dart';
+import '../../providers/communication_provider.dart';
+import 'edit_message_dialog.dart';
 
-class ContextMessageBubble extends StatefulWidget {
+class ContextMessageBubble extends ConsumerStatefulWidget {
   final ChatMessageModel message;
 
   const ContextMessageBubble({super.key, required this.message});
 
   @override
-  State<ContextMessageBubble> createState() => _ContextMessageBubbleState();
+  ConsumerState<ContextMessageBubble> createState() => _ContextMessageBubbleState();
 }
 
-class _ContextMessageBubbleState extends State<ContextMessageBubble> {
+class _ContextMessageBubbleState extends ConsumerState<ContextMessageBubble> {
   bool _showOriginal = false;
+
+  void _openEditDialog() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      EditMessageDialog.show(
+        context: context,
+        message: widget.message,
+        onSave: (newText) async {
+          final success = await ref
+              .read(communicationNotifierProvider.notifier)
+              .editMessage(widget.message.id, newText);
+          if (success && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Pesan berhasil diperbarui.'),
+                backgroundColor: AppColors.successGreen,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +48,11 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
     // Dalam konteks ini diasumsikan user adalah Teman Tuli (app owner).
     final isCurrentUser = widget.message.sender == SenderType.userTuli;
     final hasContext = widget.message.isContextApplied && widget.message.originalText != null;
+    final canEdit = widget.message.canBeEdited;
+
+    final hourStr = widget.message.timestamp.hour.toString().padLeft(2, '0');
+    final minuteStr = widget.message.timestamp.minute.toString().padLeft(2, '0');
+    final timeStr = "$hourStr:$minuteStr";
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
@@ -29,77 +61,112 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              decoration: BoxDecoration(
-                color: isCurrentUser ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16.0),
-                  topRight: const Radius.circular(16.0),
-                  bottomLeft: Radius.circular(isCurrentUser ? 16.0 : 4.0),
-                  bottomRight: Radius.circular(isCurrentUser ? 4.0 : 16.0),
+            child: GestureDetector(
+              onLongPress: canEdit ? _openEditDialog : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.78,
                 ),
-                border: isCurrentUser
-                    ? null
-                    : Border.all(color: Colors.grey.shade200, width: 1.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 4.0,
-                    offset: const Offset(0, 2),
+                decoration: BoxDecoration(
+                  color: isCurrentUser ? AppColors.primary : Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16.0),
+                    topRight: const Radius.circular(16.0),
+                    bottomLeft: Radius.circular(isCurrentUser ? 16.0 : 4.0),
+                    bottomRight: Radius.circular(isCurrentUser ? 4.0 : 16.0),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- SENDER NAME ---
-                  Text(
-                    isCurrentUser ? 'Teman Tuli' : 'Teman Dengar',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isCurrentUser ? Colors.white70 : AppColors.primary.withValues(alpha: 0.8),
+                  border: isCurrentUser
+                      ? null
+                      : Border.all(color: Colors.grey.shade200, width: 1.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // --- CONTEXT BADGE ---
-                  if (hasContext)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isCurrentUser 
-                              ? Colors.white.withValues(alpha: 0.2) 
-                              : AppColors.secondary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- SENDER NAME & ACTION MENU ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isCurrentUser ? 'Teman Tuli' : 'Teman Dengar',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isCurrentUser ? Colors.white70 : AppColors.primary.withValues(alpha: 0.8),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              widget.message.appliedContext!.icon,
-                              size: 12,
-                              color: isCurrentUser ? Colors.white : AppColors.secondary,
+                        if (canEdit)
+                          PopupMenuButton<String>(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.more_horiz_rounded,
+                              size: 20,
+                              color: isCurrentUser ? Colors.white70 : Colors.black45,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'AI: ${widget.message.appliedContext!.label}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isCurrentUser ? Colors.white : AppColors.secondary,
-                                fontWeight: FontWeight.bold,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            onSelected: (val) {
+                              if (val == 'edit') {
+                                _openEditDialog();
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              const PopupMenuItem<String>(
+                                value: 'edit',
+                                height: 36,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                                    SizedBox(width: 8),
+                                    Text('Edit Pesan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // --- CONTEXT BADGE ---
+                    if (hasContext)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isCurrentUser 
+                                ? Colors.white.withValues(alpha: 0.2) 
+                                : AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                widget.message.appliedContext!.icon,
+                                size: 12,
+                                color: isCurrentUser ? Colors.white : AppColors.secondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'AI: ${widget.message.appliedContext!.label}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isCurrentUser ? Colors.white : AppColors.secondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
                   // --- MAIN TEXT & TIMESTAMP ---
                   Wrap(
@@ -140,8 +207,18 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
                             ),
                             const SizedBox(width: 8),
                           ],
+                          if (widget.message.isEdited) ...[
+                            Text(
+                              'Diedit • ',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                                color: isCurrentUser ? Colors.white70 : Colors.black45,
+                              ),
+                            ),
+                          ],
                           Text(
-                            "${widget.message.timestamp.hour.toString().padLeft(2, '0')}:${widget.message.timestamp.minute.toString().padLeft(2, '0')}",
+                            timeStr,
                             style: TextStyle(
                               fontSize: 10,
                               color: isCurrentUser ? Colors.white70 : Colors.black45,
@@ -155,8 +232,9 @@ class _ContextMessageBubbleState extends State<ContextMessageBubble> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../providers/communication_provider.dart';
 import '../widgets/context_selector_bar.dart';
 import '../widgets/context_message_bubble.dart';
+import '../widgets/voice_recording_bar.dart';
 
 class CommunicationScreen extends ConsumerStatefulWidget {
   final String? conversationId;
@@ -165,46 +166,10 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
               ),
             ),
 
-            // ==========================================
-            // 3. LIVE STT PREVIEW AREA
-            // ==========================================
-            if (commState.isListening || commState.currentRecognizedText.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.mic, size: 16, color: AppColors.primary),
-                        SizedBox(width: 4),
-                        Text('Mendengarkan...', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      commState.currentRecognizedText.isEmpty ? 'Silakan bicara...' : commState.currentRecognizedText,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black87,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
             const Divider(height: 1, color: Color(0xFFEEEEEE)),
 
             // ==========================================
-            // 4. BOTTOM COMPOSER
+            // 3. BOTTOM COMPOSER / VOICE RECORDING BAR
             // ==========================================
             Container(
               color: Colors.white,
@@ -214,107 +179,118 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 12.0,
                 10.0 + (MediaQuery.of(context).viewInsets.bottom > 0 ? 0.0 : MediaQuery.paddingOf(context).bottom),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // --- Text Input ---
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(24.0),
-                        border: Border.all(
-                          color: _focusNode.hasFocus ? AppColors.primary : Colors.transparent,
-                          width: 1.0,
+              child: commState.isListening
+                  ? const VoiceRecordingBar()
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // --- Text Input ---
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(24.0),
+                              border: Border.all(
+                                color: _focusNode.hasFocus ? AppColors.primary : Colors.transparent,
+                                width: 1.0,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _textController,
+                              focusNode: _focusNode,
+                              maxLines: 4,
+                              minLines: 1,
+                              textInputAction: TextInputAction.send,
+                              decoration: const InputDecoration(
+                                hintText: 'Ketik pesan...',
+                                hintStyle: TextStyle(color: Colors.black54, fontSize: 15),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              onSubmitted: (val) {
+                                if (val.trim().isNotEmpty) {
+                                  notifier.sendTextAndSpeak(val.trim());
+                                  _textController.clear();
+                                }
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _focusNode,
-                        maxLines: 4,
-                        minLines: 1,
-                        textInputAction: TextInputAction.send,
-                        decoration: const InputDecoration(
-                          hintText: 'Ketik pesan...',
-                          hintStyle: TextStyle(color: Colors.black54, fontSize: 15),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        onSubmitted: (val) {
-                          if (val.trim().isNotEmpty) {
-                            notifier.sendTextAndSpeak(val.trim());
-                            _textController.clear();
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                  // --- Camera Button ---
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => context.pushNamed('sign_recognition'),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade200,
+                        // --- Camera Button ---
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => context.pushNamed('sign_recognition'),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey.shade200,
+                              ),
+                              child: const Icon(Icons.videocam_rounded, color: Colors.black54, size: 22),
+                            ),
+                          ),
                         ),
-                        child: const Icon(Icons.videocam_rounded, color: Colors.black54, size: 22),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                  // --- Send Button ---
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        if (_textController.text.trim().isNotEmpty) {
-                          notifier.sendTextAndSpeak(_textController.text.trim());
-                          _textController.clear();
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary,
+                        // --- DYNAMIC ACTION BUTTON: MIC ↔ SEND ---
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _textController,
+                          builder: (context, value, child) {
+                            final isTextEmpty = value.text.trim().isEmpty;
+                            return AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              transitionBuilder: (child, animation) {
+                                return ScaleTransition(scale: animation, child: child);
+                              },
+                              child: isTextEmpty
+                                  ? Material(
+                                      key: const ValueKey('composer_mic_button'),
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () => notifier.startVoiceRecording(),
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.primary,
+                                          ),
+                                          child: const Icon(Icons.mic_rounded, color: Colors.white, size: 22),
+                                        ),
+                                      ),
+                                    )
+                                  : Material(
+                                      key: const ValueKey('composer_send_button'),
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          final text = _textController.text.trim();
+                                          if (text.isNotEmpty) {
+                                            notifier.sendTextAndSpeak(text);
+                                            _textController.clear();
+                                          }
+                                        },
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.primary,
+                                          ),
+                                          child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                                        ),
+                                      ),
+                                    ),
+                            );
+                          },
                         ),
-                        child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
-                      ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // --- Microphone Button ---
-                  GestureDetector(
-                    onTap: () => notifier.toggleListening(),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: commState.isListening ? AppColors.error : AppColors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: commState.isListening
-                            ? [BoxShadow(color: AppColors.error.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 2)]
-                            : [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 4, spreadRadius: 1)],
-                      ),
-                      child: Icon(
-                        commState.isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -370,3 +346,4 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
     );
   }
 }
+

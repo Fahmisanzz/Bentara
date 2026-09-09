@@ -9,7 +9,7 @@ class AppLoading extends StatelessWidget {
     return Center(
       child: Semantics(
         label: 'Loading',
-        child: CircularProgressIndicator(
+        child: const CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
       ),

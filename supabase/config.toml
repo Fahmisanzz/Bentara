@@ -1,0 +1,4 @@
+project_id = "bentara"
+
+[functions.context-translation]
+verify_jwt = false

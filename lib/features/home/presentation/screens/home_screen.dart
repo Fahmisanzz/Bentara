@@ -32,238 +32,233 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.primaryLight, // Solid Layer 1 Blue
-      body: Stack(
+      body: Column(
         children: [
-          // LAYER 1: SOLID BLUE BACKGROUND (Inherited from Scaffold backgroundColor)
-
-          // CONTENT COLUMN
-          SafeArea(
-            bottom: true,
-            child: Column(
+          // LAYER 1: USER HEADER (Padded for Status Bar)
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.paddingOf(context).top + 10.0,
+              left: 20.0,
+              right: 20.0,
+              bottom: 10.0,
+            ),
+            child: Row(
               children: [
-                // LAYER 1: USER HEADER
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                  child: Row(
-                    children: [
-                      // Profile Avatar
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => context.pushNamed(RouteNames.profile),
-                          behavior: HitTestBehavior.opaque,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44.0,
-                                height: 44.0,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2.0,
+                // Profile Avatar
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => context.pushNamed(RouteNames.profile),
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44.0,
+                          height: 44.0,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2.0,
+                            ),
+                            color: Colors.white,
+                          ),
+                          child: ClipOval(
+                            child: userAvatar != null
+                                ? (userAvatar.startsWith('http')
+                                    ? Image.network(userAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
+                                    : (userAvatar.startsWith('data:')
+                                        ? Image.memory(base64Decode(userAvatar.split(',').last), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
+                                        : Image.file(File(userAvatar), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))))
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    color: AppColors.primary,
+                                    size: 26.0,
                                   ),
+                          ),
+                        ),
+                        const SizedBox(width: 12.0),
+                        // User Name & Email
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                userName,
+                                style: const TextStyle(
                                   color: Colors.white,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
                                 ),
-                                child: ClipOval(
-                                  child: userAvatar != null
-                                      ? (userAvatar.startsWith('http')
-                                          ? Image.network(userAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
-                                          : (userAvatar.startsWith('data:')
-                                              ? Image.memory(base64Decode(userAvatar.split(',').last), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))
-                                              : Image.file(File(userAvatar), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: AppColors.primary, size: 26.0))))
-                                      : const Icon(
-                                          Icons.person_rounded,
-                                          color: AppColors.primary,
-                                          size: 26.0,
-                                        ),
-                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(width: 12.0),
-                              // User Name & Email
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      userName,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.w800,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2.0),
-                                    Text(
-                                      userEmail,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12.0,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.1,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                              const SizedBox(height: 2.0),
+                              Text(
+                                userEmail,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.1,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                      // Notification Bell
-                      Container(
-                        width: 40.0,
-                        height: 40.0,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white, // Solid white, no transparency
-                          border: Border.all(color: Colors.white, width: 1.0),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(
-                            Icons.notifications_outlined,
-                            color: AppColors.primaryDark,
-                            size: 20.0,
-                          ),
-                          onPressed: () {
-                            context.pushNamed(RouteNames.history);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-
-                // LAYER 2: SOLID WHITE BOTTOM SHEET (FIXED / NON-SCROLLABLE)
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface, // Solid White
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(32.0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10.0,
-                          offset: const Offset(0, -4.0),
                         ),
                       ],
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        20.0,
-                        20.0,
-                        20.0,
-                        16.0 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                ),
+                // Notification Bell
+                Container(
+                  width: 40.0,
+                  height: 40.0,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white, // Solid white, no transparency
+                    border: Border.all(color: Colors.white, width: 1.0),
+                  ),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.primaryDark,
+                      size: 20.0,
+                    ),
+                    onPressed: () {
+                      context.pushNamed(RouteNames.history);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12.0),
+
+          // LAYER 2: SOLID WHITE BOTTOM SHEET (STRETCHES ALL THE WAY TO SCREEN BOTTOM EDGE)
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface, // Solid White
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, -4.0),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20.0,
+                  20.0,
+                  20.0,
+                  16.0 + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // BENTARA BRANDING
+                    Row(
+                      children: [
+                        Image.asset(
+                          'assets/logos/logo_bentara_biru.webp', // Keep logo asset as requested
+                          height: 20.0,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.shield, color: AppColors.primary, size: 20);
+                          },
+                        ),
+                        const SizedBox(width: 8.0),
+                        const Text(
+                          'BENTARA',
+                          style: TextStyle(
+                            color: AppColors.primaryDark,
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+
+                    // EMERGENCY BUTTON — Flutter Native Solid Gradient
+                    _EmergencyButton(
+                      onTap: () => context.pushNamed(RouteNames.emergency),
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // MENU UTAMA HEADER
+                    const Text(
+                      'Menu Utama',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
                       ),
+                    ),
+                    const SizedBox(height: 10.0),
+
+                    // 2x2 CLEAN SOLID GRADIENT FEATURE CARDS GRID (FIXED FLEX)
+                    Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // BENTARA BRANDING
-                          Row(
-                            children: [
-                              Image.asset(
-                                'assets/logos/logo_bentara_biru.webp', // Keep logo asset as requested
-                                height: 20.0,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.shield, color: AppColors.primary, size: 20);
-                                },
-                              ),
-                              const SizedBox(width: 8.0),
-                              const Text(
-                                'BENTARA',
-                                style: TextStyle(
-                                  color: AppColors.primaryDark,
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12.0),
-
-                          // EMERGENCY BUTTON — Flutter Native Solid Gradient
-                          _EmergencyButton(
-                            onTap: () => context.pushNamed(RouteNames.emergency),
-                          ),
-                          const SizedBox(height: 16.0),
-
-                          // MENU UTAMA HEADER
-                          const Text(
-                            'Menu Utama',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 10.0),
-
-                          // 2x2 CLEAN SOLID GRADIENT FEATURE CARDS GRID (FIXED FLEX)
                           Expanded(
-                            child: Column(
+                            child: Row(
                               children: [
                                 Expanded(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _FeatureCard(
-                                          title: 'Komunikasi\nLangsung',
-                                          iconData: Icons.chat_bubble_outline_rounded,
-                                          gradient: AppGradients.lightBlue,
-                                          iconColor: AppColors.lightBlue,
-                                          onTap: () => context.pushNamed(RouteNames.communication),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: _FeatureCard(
-                                          title: 'Penerjemah\nIsyarat',
-                                          iconData: Icons.sign_language,
-                                          gradient: AppGradients.green,
-                                          iconColor: AppColors.successGreen,
-                                          onTap: () => context.pushNamed(RouteNames.signRecognition),
-                                        ),
-                                      ),
-                                    ],
+                                  child: _FeatureCard(
+                                    title: 'Komunikasi\nLangsung',
+                                    iconData: Icons.chat_bubble_outline_rounded,
+                                    gradient: AppGradients.lightBlue,
+                                    iconColor: AppColors.lightBlue,
+                                    onTap: () => context.pushNamed(RouteNames.communication),
                                   ),
                                 ),
-                                const SizedBox(height: 12.0),
+                                const SizedBox(width: 12.0),
                                 Expanded(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _FeatureCard(
-                                          title: 'Komunikasi\nCepat',
-                                          iconData: Icons.flash_on_rounded,
-                                          gradient: AppGradients.purple,
-                                          iconColor: AppColors.accentPurple,
-                                          onTap: () => context.pushNamed(RouteNames.quickCommunication),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: _FeatureCard(
-                                          title: 'Riwayat\nPercakapan',
-                                          iconData: Icons.history_rounded,
-                                          gradient: AppGradients.pink,
-                                          iconColor: AppColors.accentPink,
-                                          onTap: () => context.pushNamed(RouteNames.history),
-                                        ),
-                                      ),
-                                    ],
+                                  child: _FeatureCard(
+                                    title: 'Penerjemah\nIsyarat',
+                                    iconData: Icons.sign_language,
+                                    gradient: AppGradients.green,
+                                    iconColor: AppColors.successGreen,
+                                    onTap: () => context.pushNamed(RouteNames.signRecognition),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12.0),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _FeatureCard(
+                                    title: 'Komunikasi\nCepat',
+                                    iconData: Icons.flash_on_rounded,
+                                    gradient: AppGradients.purple,
+                                    iconColor: AppColors.accentPurple,
+                                    onTap: () => context.pushNamed(RouteNames.quickCommunication),
+                                  ),
+                                ),
+                                const SizedBox(width: 12.0),
+                                Expanded(
+                                  child: _FeatureCard(
+                                    title: 'Riwayat\nPercakapan',
+                                    iconData: Icons.history_rounded,
+                                    gradient: AppGradients.pink,
+                                    iconColor: AppColors.accentPink,
+                                    onTap: () => context.pushNamed(RouteNames.history),
                                   ),
                                 ),
                               ],
@@ -272,9 +267,9 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

@@ -34,14 +34,6 @@ class _QuickCommunicationScreenState
     final state = ref.watch(quickCommNotifierProvider);
     final notifier = ref.read(quickCommNotifierProvider.notifier);
 
-    // Keep status bar dark icons on blue header
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
-
     return Scaffold(
       backgroundColor: AppColors.accentPurple, // LAYER 1
       body: GestureDetector(
@@ -179,9 +171,6 @@ class _QuickCommunicationScreenState
                         ),
                       ),
                     ),
-
-                    // Bottom safe area for Android navigation bar
-                    const SafeArea(top: false, child: SizedBox.shrink()),
                   ],
                 ),
               ),
@@ -228,13 +217,19 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const Text(
-            'Komunikasi Cepat',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.1,
+          const Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Komunikasi Cepat',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.1,
+                ),
+              ),
             ),
           ),
         ],
@@ -347,7 +342,20 @@ class _CategoryFilter extends StatelessWidget {
         return 'Umum';
       case 'medical':
       case 'medis':
-        return 'Medis';
+      case 'rumah sakit':
+      case 'rumah_sakit':
+        return 'Rumah Sakit';
+      case 'bank':
+        return 'Bank';
+      case 'police':
+      case 'kepolisian':
+        return 'Kepolisian';
+      case 'transport':
+      case 'transportasi':
+        return 'Transportasi';
+      case 'admin':
+      case 'administrasi':
+        return 'Administrasi';
       case 'public':
       case 'publik':
         return 'Publik';
@@ -462,7 +470,20 @@ class _PhraseCard extends StatelessWidget {
         return 'UMUM';
       case 'medical':
       case 'medis':
-        return 'MEDIS';
+      case 'rumah sakit':
+      case 'rumah_sakit':
+        return 'RUMAH SAKIT';
+      case 'bank':
+        return 'BANK';
+      case 'police':
+      case 'kepolisian':
+        return 'KEPOLISIAN';
+      case 'transport':
+      case 'transportasi':
+        return 'TRANSPORTASI';
+      case 'admin':
+      case 'administrasi':
+        return 'ADMINISTRASI';
       case 'public':
       case 'publik':
         return 'PUBLIK';
@@ -614,7 +635,7 @@ class _ActionButton extends StatelessWidget {
       return OutlinedButton.icon(
         onPressed: onTap,
         icon: Icon(icon, size: 16),
-        label: Text(label),
+        label: FittedBox(fit: BoxFit.scaleDown, child: Text(label)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: AppColors.accentPurple,
@@ -634,7 +655,7 @@ class _ActionButton extends StatelessWidget {
       return ElevatedButton.icon(
         onPressed: onTap,
         icon: Icon(icon, size: 16),
-        label: Text(label),
+        label: FittedBox(fit: BoxFit.scaleDown, child: Text(label)),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accentPurple,
           foregroundColor: Colors.white,
