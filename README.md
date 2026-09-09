@@ -343,7 +343,7 @@ Aplikasi BENTARA dirancang dengan mematuhi pedoman **Web Content Accessibility G
 
 Dikembangkan dengan dedikasi penuh untuk inklusivitas disabilitas Indonesia oleh Tim BENTARA (KMIPN 2026).
 
-Proyek ini dilisensikan di bawah **MIT License** — Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk kepentingan edukasi dan sosial.
+Proyek ini dibuat oleh mahasiswa Politeknik Negeri Fakfak — Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk kepentingan edukasi dan sosial.
 
 <div align="center">
   <sub>Dibuat dengan ❤️ untuk Indonesia yang lebih inklusif dan ramah disabilitas.</sub>
