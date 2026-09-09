@@ -403,8 +403,6 @@ flutter test test/core/responsive_screens_test.dart
 
 ## 📱 Panduan Skenario Demo (Demo Runbook)
 
-Gunakan panduan skenario berikut saat presentasi langsung di hadapan dewan juri:
-
 ### 🎬 Skenario 1: Komunikasi Dua Arah & Live Audio Recording
 1. Buka menu **"Komunikasi Langsung"**.
 2. **Teman Dengar**: Tekan tombol **Mikrofon** di bagian bawah. Bar perekaman suara interaktif akan muncul.
